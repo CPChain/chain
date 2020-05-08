@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
 )
@@ -93,6 +94,10 @@ func GetEndpoint(ctx *cli.Context) (string, error) {
 		return "", errors.New("endpoint must be provided!")
 	}
 	endpoint := ctx.String(Endpoint)
+	endpoint, err := configs.ResolveUrl(endpoint)
+	if err != nil {
+		log.Fatal("resolve endpoint error", "err", err)
+	}
 	return endpoint, nil
 }
 

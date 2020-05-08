@@ -96,7 +96,6 @@ contract Proposal {
     // approval
     function approval(string id) public payable onlyEnabled existsCheck(id) timeoutCheck(id) {
         require(!proposals[id].approvedAddr.contains(msg.sender), "you have already approved this proposal");
-        require(proposals[id].status != Status.Successful, "This proposal has already admitted by congress");
         proposals[id].approvedAddr.insert(msg.sender);
         proposals[id].approvalCnt += 1;
         if (proposals[id].status == Status.Deposited) {
@@ -212,6 +211,16 @@ contract Proposal {
     // get period
     function getPeriod(string id) public view existsCheck(id) returns (uint256) {
         return proposals[id].period;
+    }
+
+    // get approved address
+    function getApprovedAddress(string id) public view existsCheck(id) returns (address[]) {
+        return proposals[id].approvedAddr.getAll();
+    }
+
+    // get voted address
+    function getVotedAddress(string id) public view existsCheck(id) returns (address[]) {
+        return proposals[id].votedAddr.getAll();
     }
 
     // owner can enable and disable proposal contract
