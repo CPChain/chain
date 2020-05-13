@@ -54,6 +54,13 @@ func Test_impeachPunishRatio(t *testing.T) {
 			},
 			want: 0.,
 		},
+		{
+			name: "7",
+			args: args{
+				impeachedNumber: 10000,
+			},
+			want: 0.,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

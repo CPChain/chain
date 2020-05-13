@@ -172,6 +172,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 	blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
 	defer blockchain.Stop()
 
+	// generate block
 	genblock := func(i int, parent *types.Block, pubStatedb *state.StateDB, privStateDB *state.StateDB) (*types.Block, types.Receipts) {
 		// TODO(karalabe): This is needed for clique, which depends on multiple blocks.
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.

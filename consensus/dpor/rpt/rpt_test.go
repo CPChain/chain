@@ -48,6 +48,7 @@ var (
 	rptAddr         common.Address
 )
 
+// create a simulated blockchain with n blocks
 func newBlockchain(n int) *core.BlockChain {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -55,13 +56,16 @@ func newBlockchain(n int) *core.BlockChain {
 	genesis := gspec.MustCommit(db)
 	config := gspec.Config
 	dporConfig := config.Dpor
+	// fake a dpor engine
 	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	// generate blocks
 	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, nil)
 	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
 	_, _ = blockchain.InsertChain(blocks)
 	return blockchain
 }
 
+// create blockchain with n blocks and some accounts
 func newBlockchainWithBalances(n int, accounts []common.Address) *core.BlockChain {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -131,6 +135,7 @@ func generateABatchAccounts(n int) []common.Address {
 	return addresses
 }
 
+// benchs of default parameters
 func BenchmarkRptOf_10a(b *testing.B) {
 	benchRptOf(b, 10)
 }
@@ -599,4 +604,29 @@ func TestLowRptCount(t *testing.T) {
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
 	lowrptsum := rptInstance.LowRptCount(77)
 	t.Log("Low Rpt sum seats is:", lowrptsum)
+}
+
+func TestLowRptCount2(t *testing.T) {
+	numAccount := 1000
+	accounts := generateABatchAccounts(numAccount)
+	contractAddr, backend, _ := newBlockchainWithDb(500, accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	lowrptsum := rptInstance.LowRptCount(77)
+	if lowrptsum != 38 {
+		t.Errorf("Expected %v, but got %v", 38, lowrptsum)
+	}
+	t.Log("Low Rpt sum seats is:", lowrptsum)
+}
+
+func TestTxsValueWhenWindowNumIs1000(t *testing.T) {
+	numAccount := 5
+	numBlocks := 100
+	windowNum := 1000
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.TxsValueOf(addr, accounts, 50, windowNum)
+		t.Log("idx", i, "Transaction Count of reputation", rank, "addr", addr.Hex())
+	}
 }
