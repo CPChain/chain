@@ -48,7 +48,7 @@ func NewDpor(config *configs.DporConfig, number uint64, hash common.Hash, propos
 }
 
 func Test_GetCurrentBlock(t *testing.T) {
-	t.Skip("How to struct dpor.chain????")
+	// t.Skip("How to struct dpor.chain????")
 	db := database.NewMemDatabase()
 	gspec := core.DefaultGenesisBlock()
 	gspec.GasLimit = 100000000
@@ -56,7 +56,16 @@ func Test_GetCurrentBlock(t *testing.T) {
 	config := gspec.Config
 	dporConfig := config.Dpor
 	dporFakeEngine := NewFaker(dporConfig, db)
-	fmt.Println(dporFakeEngine.GetCurrentBlock())
+	genesis := gspec.MustCommit(db)
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
+	// new a chain for dpor
+	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, 10, nil)
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
+	_, _ = blockchain.InsertChain(blocks)
+	dporFakeEngine.SetChain(blockchain)
+	if dporFakeEngine.GetCurrentBlock().NumberU64() != 10 {
+		t.Errorf("expect %v, but got %v", 10, dporFakeEngine.GetCurrentBlock().NumberU64())
+	}
 }
 
 func Test_FutureTermOf(t *testing.T) {
@@ -160,20 +169,22 @@ func Test_InsertChain(t *testing.T) {
 	dpor.chain = newBlockchain(888)
 	unknownBlock := types.NewBlock(newHeader(), nil, nil)
 	err := dpor.InsertChain(unknownBlock)
-	fmt.Println(err)
-	num, err := dpor.chain.InsertChain(types.Blocks{unknownBlock})
-	fmt.Println(err)
-	fmt.Println(num)
-	fmt.Println(unknownBlock.Hash())
-	fmt.Println("has or not", dpor.HasBlockInChain(unknownBlock.Hash(), 888))
-	fmt.Println(dpor.chain.GetBlock(unknownBlock.Hash(), 888))
 	if err != nil {
-		t.Error("Insertchain has some problems...")
+		t.Fatal(err)
 	}
-	fmt.Println(dpor.GetCurrentBlock().Header().Number)
+	num, err := dpor.chain.InsertChain(types.Blocks{unknownBlock})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if num != 1 {
+		t.Fatalf("expect num be %v, but got %v", 1, num)
+	}
+	t.Log("has or not", dpor.HasBlockInChain(unknownBlock.Hash(), 888))
+	t.Log(dpor.chain.GetBlock(unknownBlock.Hash(), 888))
+	t.Log(dpor.GetCurrentBlock().Header().Number)
 
-	fmt.Println(dpor.currentSnap.Number)
-	fmt.Println(dpor.HasBlockInChain(unknownBlock.Hash(), 889))
+	t.Log(dpor.currentSnap.Number)
+	t.Log(dpor.HasBlockInChain(unknownBlock.Hash(), 889))
 
 }
 

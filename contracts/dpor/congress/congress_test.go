@@ -125,10 +125,10 @@ func TestJoinTwice(t *testing.T) {
 	// join congress
 	candidateTransactOpts := bind.NewKeyedTransactor(candidateKey)
 	candidateInvest := new(big.Int).Mul(big.NewInt(200000), big.NewInt(1e+18))
-	candidateTransactOpts.GasLimit = uint64(50000000)
+	candidateTransactOpts.GasLimit = uint64(5000000)
 	candidateTransactOpts.Value = candidateInvest
 	// once
-	_, err := instance.JoinCongress(candidateTransactOpts, initVersion)
+	tx, err := instance.JoinCongress(candidateTransactOpts, initVersion)
 	checkError(t, "join congress", err)
 
 	contractBackend.Commit()
@@ -148,10 +148,23 @@ func TestJoinTwice(t *testing.T) {
 		t.Error("initBalance != candidateInvest + gasUsed + currentBalance")
 	}
 
+	// check receipt
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == 0 {
+		t.Error("receipt's status should be succeed")
+	}
+
 	// twice
-	_, err = instance.JoinCongress(candidateTransactOpts, initVersion)
+	tx, err = instance.JoinCongress(candidateTransactOpts, initVersion)
+	_ = tx
 	checkError(t, "join congress", err)
+
 	contractBackend.Commit()
+	// check receipt
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != 0 {
+		t.Error("receipt's status should be zero")
+	}
 
 	checkIsInCongress(t, instance, candidateAddr, true)
 

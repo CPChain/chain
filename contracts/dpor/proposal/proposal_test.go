@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	// ../build/bin/abigen --sol ./dpor/proposal/proposal.sol --pkg proposal --out ./dpor/proposal/proposal.go
 	ownerKey, _     = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	ownerAddr       = crypto.PubkeyToAddress(ownerKey.PublicKey)
 	ownerInitAmount = new(big.Int).Mul(big.NewInt(1000), big.NewInt(configs.Cpc))
@@ -109,7 +110,7 @@ func TestDeployContracts(t *testing.T) {
 func TestSubmitProposal(t *testing.T) {
 	// init
 	backend := initBackend()
-	_, proposalInstance := initContracts(backend)
+	congressIns, proposalInstance := initContracts(backend)
 
 	ch := make(chan *proposal.ProposalSubmitProposal)
 	done := make(chan struct{})
@@ -132,10 +133,24 @@ func TestSubmitProposal(t *testing.T) {
 
 	period := big.NewInt(1)
 	id := uuid
+	if _, err := proposalInstance.Submit(opts, id, period); err == nil {
+		t.Fatal("should get an error because the congress is not built now")
+	}
+	backend.Commit()
+
+	// init congress greater than minMember
+	keys := initKeys(t, backend, 11)
+	initCongress(t, backend, congressIns, keys)
+
+	// you can submit proposal now
 	if _, err := proposalInstance.Submit(opts, id, period); err != nil {
 		t.Fatal(err)
 	}
 	backend.Commit()
+
+	gasUsed := backend.Blockchain().CurrentBlock().GasUsed()
+	gasLimit := backend.Blockchain().CurrentBlock().GasLimit()
+	t.Log(gasUsed, gasLimit)
 
 	checkProposalCnt(t, proposalInstance, 1)
 	checkID(t, proposalInstance, 0, id)
@@ -156,12 +171,34 @@ func TestSubmitProposal(t *testing.T) {
 	checkStatus(t, proposalInstance, id, 3)
 
 	<-done
+
+	gasPrice, _ := backend.SuggestGasPrice(context.Background())
+	t.Log(gasPrice)
+
+	// submit twice
+	opts = bind.NewKeyedTransactor(bankKey)
+	opts.Value = new(big.Int).Mul(big.NewInt(100), big.NewInt(configs.Cpc))
+	opts.GasLimit = uint64(500000)
+	tx, err := proposalInstance.Submit(opts, id, period)
+	if err != nil {
+		t.Fatal(err)
+	}
+	backend.Commit()
+	// check receipt
+	receipt, _ := backend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != 0 {
+		t.Error("receipt's status should fail")
+	}
 }
 
 func TestSubmitWithWrongParams(t *testing.T) {
 	// init
 	backend := initBackend()
-	_, proposalInstance := initContracts(backend)
+	congressIns, proposalInstance := initContracts(backend)
+
+	// init congress greater than minMember
+	keys := initKeys(t, backend, 11)
+	initCongress(t, backend, congressIns, keys)
 
 	// less deposit
 	opts := bind.NewKeyedTransactor(bankKey)
@@ -213,7 +250,11 @@ func TestSubmitWithWrongParams(t *testing.T) {
 func TestApproval(t *testing.T) {
 	// init
 	backend := initBackend()
-	_, proposalInstance := initContracts(backend)
+	congressIns, proposalInstance := initContracts(backend)
+
+	// init congress greater than minMember
+	keys := initKeys(t, backend, 11)
+	initCongress(t, backend, congressIns, keys)
 
 	// submit a proposal
 	opts := bind.NewKeyedTransactor(bankKey)
@@ -314,13 +355,13 @@ func TestApproval(t *testing.T) {
 func TestApprovalUtilThreshold(t *testing.T) {
 	// init
 	backend := initBackend()
-	_, instance := initContracts(backend)
+	congressIns, instance := initContracts(backend)
 
 	// update approval cnt threshold
 	opts := bind.NewKeyedTransactor(ownerKey)
 	opts.Value = big.NewInt(0)
 
-	threshold := int64(10)
+	threshold := int64(11)
 
 	if _, err := instance.SetApprovalThreshold(opts, big.NewInt(threshold)); err != nil {
 		t.Error(err)
@@ -335,6 +376,9 @@ func TestApprovalUtilThreshold(t *testing.T) {
 
 	// generate 10 key
 	keys := initKeys(t, backend, int(threshold))
+
+	// init congress greater than minMember
+	initCongress(t, backend, congressIns, keys)
 
 	// submit a proposal
 	opts = bind.NewKeyedTransactor(bankKey)
@@ -365,7 +409,7 @@ func TestApprovalUtilThreshold(t *testing.T) {
 
 func TestVote(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
@@ -378,6 +422,12 @@ func TestVote(t *testing.T) {
 
 	// update approval threshold to keysCnt
 	updateApprovalThreshold(t, backend, instance, keysCnt)
+
+	// init congress
+	initCongress(t, backend, congressIns, keys)
+
+	// check the nums in congress
+	checkCongressNum(t, congressIns, keysCnt)
 
 	// submit a proposal
 	submitProposal(t, backend, instance, id)
@@ -403,12 +453,6 @@ func TestVote(t *testing.T) {
 
 	checkVoteCnt(t, instance, id, 0)
 
-	// init congress, add all keys to congress
-	initCongress(t, backend, congressIns, keys)
-
-	// check the nums in congress
-	checkCongressNum(t, congressIns, keysCnt)
-
 	// update the voteThreshold to 100
 	updateVoteThreshold(t, backend, instance, 100)
 
@@ -417,7 +461,7 @@ func TestVote(t *testing.T) {
 
 	// status of the proposal already has been set to "successful"
 	checkStatus(t, instance, id, 2)
-	checkVoteCnt(t, instance, id, 10)
+	checkVoteCnt(t, instance, id, 11)
 
 	// now, even this proposal timeout, the status won't change
 	// make proposal be timeout
@@ -436,16 +480,18 @@ func TestVote(t *testing.T) {
 
 func TestVoteTwice(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
 	backend := initBackend()
 	congressIns, instance := initContracts(backend)
-	_ = congressIns
 
 	// generate 10 key
 	keys := initKeys(t, backend, int(keysCnt))
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	// update approval threshold to keysCnt
 	updateApprovalThreshold(t, backend, instance, keysCnt)
@@ -461,9 +507,6 @@ func TestVoteTwice(t *testing.T) {
 
 	// status of the proposal already has been set to "approved"
 	checkStatus(t, instance, id, 1)
-
-	// init congress, add all keys to congress
-	initCongress(t, backend, congressIns, keys)
 
 	checkVoteCnt(t, instance, id, 0)
 
@@ -500,13 +543,20 @@ func TestVoteTwice(t *testing.T) {
 	}
 
 	checkVoteCnt(t, instance, id, 3)
+	checkStatus(t, instance, id, 1)
+
+	if err := vote(t, backend, instance, id, keys[3]); err != nil {
+		t.Error(err)
+	}
+
+	checkVoteCnt(t, instance, id, 4)
 	checkStatus(t, instance, id, 2)
 
 }
 
 func TestVoteFail(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
@@ -588,7 +638,13 @@ func TestWithdrawWhenStatusIsDeposited(t *testing.T) {
 	)
 	// init
 	backend := initBackend()
-	_, instance, _, address := initContractsWithAddress(backend)
+	congressIns, instance, _, address := initContractsWithAddress(backend)
+
+	// generate 10 key
+	keys := initKeys(t, backend, 11)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	balance0, _ := backend.BalanceAt(context.Background(), bankAddr, backend.Blockchain().CurrentBlock().Number())
 
@@ -653,7 +709,7 @@ func TestWithdrawWhenStatusIsDeposited(t *testing.T) {
 
 func TestWithdrawWhenStatusIsAppoved(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
@@ -756,7 +812,13 @@ func TestWithdrawWhenStatusIsTimeout(t *testing.T) {
 	)
 	// init
 	backend := initBackend()
-	_, instance := initContracts(backend)
+	congressIns, instance := initContracts(backend)
+
+	// generate 10 key
+	keys := initKeys(t, backend, 11)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	// submit a proposal
 	submitProposal(t, backend, instance, id)
@@ -798,7 +860,7 @@ func TestWithdrawWhenStatusIsTimeout(t *testing.T) {
 
 func TestWithdrawWhenStatusIsApprovedButTimeout(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
@@ -841,7 +903,7 @@ func TestWithdrawWhenStatusIsApprovedButTimeout(t *testing.T) {
 
 func TestWithdrawWhenStatusIsSuccessfulButTimeout(t *testing.T) {
 	var (
-		keysCnt = 10
+		keysCnt = 11
 		id      = uuid
 	)
 	// init
@@ -889,7 +951,13 @@ func TestMultiProposals(t *testing.T) {
 		cnt = 10
 	)
 	backend := initBackend()
-	_, instance := initContracts(backend)
+	congressIns, instance := initContracts(backend)
+
+	// generate 10 key
+	keys := initKeys(t, backend, 11)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	r := rand.New(rand.NewSource(0))
 
@@ -1044,7 +1112,13 @@ func TestRefund(t *testing.T) {
 	)
 	// init
 	backend := initBackend()
-	_, instance := initContracts(backend)
+	congressIns, instance := initContracts(backend)
+
+	// generate 10 key
+	keys := initKeys(t, backend, 11)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	// submit a proposal
 	submitProposal(t, backend, instance, id)
@@ -1126,14 +1200,17 @@ func TestRefundAll(t *testing.T) {
 		cnt = 10
 	)
 	backend := initBackend()
-	_, instance := initContracts(backend)
+	congressIns, instance := initContracts(backend)
+
+	// generate 10 key
+	keys := initKeys(t, backend, 11)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
 
 	r := rand.New(rand.NewSource(0))
 
 	var list []string
-
-	// generate 10 keys
-	keys := initKeys(t, backend, cnt)
 
 	for i := 0; i < cnt; i++ {
 		tmp := randString(r, 36)
@@ -1213,7 +1290,7 @@ func TestRefundAll(t *testing.T) {
 
 func TestRefundAfterApproved(t *testing.T) {
 	var (
-		cnt = 10
+		cnt = 11
 		id  = uuid
 	)
 	backend := initBackend()
@@ -1249,7 +1326,7 @@ func TestRefundAfterApproved(t *testing.T) {
 
 func TestRefundAfterVoted(t *testing.T) {
 	var (
-		cnt = 10
+		cnt = 11
 		id  = uuid
 	)
 	backend := initBackend()
@@ -1300,7 +1377,7 @@ func TestRefundAfterVoted(t *testing.T) {
 
 func TestRefundAfterTimeout(t *testing.T) {
 	var (
-		cnt = 10
+		cnt = 11
 		id  = uuid
 	)
 	backend := initBackend()
@@ -1356,6 +1433,101 @@ func TestRefundAfterTimeout(t *testing.T) {
 			balanceBefore, balanceAfter, amountThreshold)
 	}
 
+}
+
+func TestVoteAfterCongressIsNotBuilt(t *testing.T) {
+	var (
+		cnt = 11
+		id  = uuid
+	)
+	backend := initBackend()
+	congressIns, instance := initContracts(backend)
+	// generate 10 keys
+	keys := initKeys(t, backend, cnt)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
+
+	if num, err := congressIns.GetCongressNum(nil); err != nil {
+		t.Error(err)
+	} else {
+		if num.Int64() != 11 {
+			t.Errorf("the num of congress should be %v, but got %v", cnt, num.Int64())
+		}
+	}
+
+	submitProposal(t, backend, instance, id)
+
+	checkStatus(t, instance, id, 0)
+
+	// update threshold
+	updateApprovalThreshold(t, backend, instance, cnt)
+	updateVoteThreshold(t, backend, instance, 30)
+
+	// approve all
+	approveAll(t, backend, instance, id, keys)
+
+	checkApprovalCnt(t, instance, id, int64(cnt))
+
+	checkStatus(t, instance, id, 1)
+
+	// key1 vote
+	// vote should success
+	if err := vote(t, backend, instance, id, keys[0]); err != nil {
+		t.Error(err)
+	}
+
+	// modify the period of congress
+	opts := bind.NewKeyedTransactor(ownerKey)
+	opts.Value = big.NewInt(0)
+	opts.GasLimit = uint64(5000000)
+	if _, err := congressIns.SetPeriod(opts, big.NewInt(0)); err != nil {
+		t.Error(err)
+	}
+	backend.Commit()
+
+	// key1 quit congress
+	key1Addr := crypto.PubkeyToAddress(keys[0].PublicKey)
+	balance1 := getBalance(backend, key1Addr)
+	opts = bind.NewKeyedTransactor(keys[0])
+	opts.Value = big.NewInt(0)
+	opts.GasLimit = uint64(5000000)
+	if _, err := congressIns.QuitCongress(opts); err != nil {
+		t.Error(err)
+	}
+	backend.Commit()
+	balance2 := getBalance(backend, key1Addr)
+	diff := big.NewInt(0).Sub(balance2, balance1)
+	t.Log(big.NewInt(0).Div(diff, big.NewInt(configs.Cpc)))
+
+	opts = bind.NewKeyedTransactor(keys[0])
+	opts.Value = big.NewInt(0)
+	opts.GasLimit = uint64(5000000)
+	if _, err := congressIns.QuitCongress(opts); err != nil {
+		t.Error(err)
+	}
+	backend.Commit()
+	balance3 := getBalance(backend, key1Addr)
+	diff = big.NewInt(0).Sub(balance3, balance2)
+	t.Log(big.NewInt(0).Div(diff, big.NewInt(configs.Cpc)))
+
+	if r, _ := congressIns.IsInCongress(nil, key1Addr); r {
+		t.Error("This addr should have quited congress")
+	}
+
+	if num, err := congressIns.GetCongressNum(nil); err != nil {
+		t.Error(err)
+	} else {
+		if num.Int64() != 10 {
+			t.Errorf("the num of congress should be %v, but got %v", 10, num.Int64())
+		}
+	}
+
+	// key2 vote
+	// should fail
+	if err := vote(t, backend, instance, id, keys[1]); err == nil {
+		t.Error("vote should fail")
+	}
 }
 
 func randString(r *rand.Rand, len int) string {
