@@ -16,11 +16,13 @@ contract Proposal {
     address owner; // owner has permissions to modify parameters
     uint256 public amountThreshold = 100 ether; // amount of pledge
     uint256 public approvalThreshold = 100; // threshold count of approval
-    uint16 public voteThreshold = 10; // the ratio of the approved vote, 0%-100%
+    uint16 public voteThreshold = 67; // the ratio of the approved vote, 0%-100%
     uint256 public maxPeriod = 30 days; // max period
     uint16 public idLength = 36; // id length
     // enabled indicates status of contract, only when it is true, nodes can submit proposal
     bool public enabled = true;
+    // can't submit proposals if the count of congress's member below minCongressMemberCount
+    uint16 public minCongressMemberCount = 11;
 
     CongressInterface public congress;
 
@@ -72,6 +74,7 @@ contract Proposal {
 
     // submit proposal
     function submit(string id, uint256 period) public payable onlyEnabled {
+        require(congress.getCongressNum() >= minCongressMemberCount, "congress is not built now");
         require(period <= maxPeriod, "period should less than or equal to MaxPeriod");
         require(!proposals[id].used, "ID is already exists!");
         require(bytes(id).length > 0, "ID can't be empty");
@@ -109,6 +112,7 @@ contract Proposal {
     // vote
     function vote(string id) public payable onlyEnabled existsCheck(id) timeoutCheck(id) {
         require(congress.isInCongress(msg.sender), "sender is not in congress");
+        require(congress.getCongressNum() >= minCongressMemberCount, "congress is not built now");
         require(!proposals[id].votedAddr.contains(msg.sender), "you have already voted this proposal");
         require(proposals[id].status == Status.Approved || proposals[id].status == Status.Successful,
             "This proposal hasn't approved by the community");
@@ -257,5 +261,10 @@ contract Proposal {
         require(length > 0, "length should greater than 0");
         require(length <= 256, "length should less than or equal to 256");
         idLength = length;
+    }
+
+    function setMinCongressMemberCount(uint16 number) public onlyOwner {
+        require(number > 0, "length should greater than 0");
+        minCongressMemberCount = number;
     }
 }
