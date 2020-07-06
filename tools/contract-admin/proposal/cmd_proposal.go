@@ -287,6 +287,9 @@ func showConfigs(ctx *cli.Context) error {
 	voteThreshold, _ := instance.VoteThreshold(nil)
 	log.Info("vote threshold", "value", voteThreshold)
 
+	minCongress, _ := instance.MinCongressMemberCount(nil)
+	log.Info("min member of congress", "value", minCongress)
+
 	IDLength, _ := instance.IdLength(nil)
 	log.Info("max length of ID", "value", IDLength)
 
