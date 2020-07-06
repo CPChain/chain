@@ -110,6 +110,14 @@ var (
 				Description: `set vote threshold`,
 			},
 			{
+				Name:        "set-min-congress",
+				Usage:       "set-min-congress <value>",
+				Action:      setMinCongress,
+				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
+				Description: `set vote threshold`,
+			},
+			{
 				Name:        "set-id-length",
 				Usage:       "set-id-length <value>",
 				Action:      setIDLength,
@@ -324,6 +332,20 @@ func setVoteThreshold(ctx *cli.Context) error {
 	value := utils.GetFirstIntArgument(ctx)
 	log.Info("set vote threshold", "value", value)
 	tx, err := instance.SetVoteThreshold(opts, uint16(value))
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
+}
+
+func setMinCongress(ctx *cli.Context) error {
+	instance, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+	value := utils.GetFirstIntArgument(ctx)
+	log.Info("set min member count of congress", "value", value)
+	tx, err := instance.SetMinCongressMemberCount(opts, uint16(value))
 	if err != nil {
 		return err
 	}
