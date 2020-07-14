@@ -114,6 +114,14 @@ type Peer struct {
 	events *event.Feed
 }
 
+// NewTestPeerWithConn returns a peer for testing purposes.
+func NewTestPeerWithConn(id discover.NodeID, fd net.Conn, name string, caps []Cap) *Peer {
+	conn := &conn{fd: fd, transport: nil, id: id, caps: caps, name: name}
+	peer := newPeer(conn, nil)
+	close(peer.closed) // ensures Disconnect doesn't block
+	return peer
+}
+
 // NewPeer returns a peer for testing purposes.
 func NewPeer(id discover.NodeID, name string, caps []Cap) *Peer {
 	pipe, _ := net.Pipe()

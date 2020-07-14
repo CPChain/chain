@@ -18,11 +18,13 @@
 package main
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"flag"
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"runtime"
 
@@ -67,6 +69,7 @@ func main() {
 		verbosity   = flag.Int("verbosity", int(log.LvlInfo), "log verbosity (0-9)")
 		vmodule     = flag.String("vmodule", "", "log verbosity pattern")
 		logfile     = flag.String("logfile", "", "bootnode log file")
+		ipServer    = flag.String("ipserver", "", "the gateway to receive ip")
 
 		nodeKey *ecdsa.PrivateKey
 		err     error
@@ -146,6 +149,26 @@ func main() {
 		if ext, err := natm.ExternalIP(); err == nil {
 			realaddr = &net.UDPAddr{IP: ext, Port: realaddr.Port}
 		}
+	}
+
+	if *ipServer != "" {
+		discover.AddIPHook(func(ip net.IP) {
+			// push to ip-server
+			jsonStr := []byte(fmt.Sprintf(`{ "ip": "%s"}`, ip.String()))
+			url := *ipServer
+			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+			if err != nil {
+				log.Error("create req for pushing ip info", "err", err)
+				return
+			}
+			req.Header.Set("Content-Type", "application/json")
+			client := &http.Client{}
+			_, err = client.Do(req)
+			if err != nil {
+				log.Error("when push ip info to the gateway", "err", err)
+				return
+			}
+		})
 	}
 
 	if *runv5 {
