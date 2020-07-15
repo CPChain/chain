@@ -32,6 +32,9 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+// IPHook push ip
+type IPHook func(ip net.IP)
+
 // Errors
 var (
 	errPacketTooSmall   = errors.New("too small")
@@ -67,6 +70,17 @@ const (
 	findnodePacket
 	neighborsPacket
 )
+
+var ipHooks []IPHook
+
+func init() {
+	ipHooks = make([]IPHook, 0)
+}
+
+// AddIPHook add hook
+func AddIPHook(hook IPHook) {
+	ipHooks = append(ipHooks, hook)
+}
 
 // RPC request structures
 type (
@@ -630,6 +644,12 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 	} else {
 		t.addThroughPing(n)
 	}
+	// call hooks
+	go func() {
+		for _, hook := range ipHooks {
+			go hook(from.IP)
+		}
+	}()
 	t.db.updateLastPingReceived(fromID, time.Now())
 	return nil
 }
