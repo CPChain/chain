@@ -10,6 +10,29 @@ If you find any questions unlisted here,
 please raise an issue on our `Issue Page`_.
 
 
+How to stop mining and get my CPC back?
+*************************************************
+
+1. Start CPChain program with command if you don't have a running cpchain node.
+
+.. code-block:: bash
+
+    ./cpchain run \
+    --unlock WALLET_ADDRESS \
+    --rpcaddr 127.0.0.1:8501 --mine \
+    --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner"
+        
+    # `--rpcaddr` and `--rpcapi` must be made available.
+    # your default datadir is `$HOME/.cpchain` and you can add `--datadir` to specify your datadir
+
+2. Wait for data synchronization to complete.
+3. open another console and type command
+
+.. code-block:: bash
+
+    ./cpchain campaign stop --keystore YOUR_KEYSTORE_DIR --rpc 127.0.0.1:8501
+
+:code:`YOUR_KEYSTORE_DIR` must add :code:`/`，e.g.: :code:`./datadir/keystore/`
 
 How to interact with CPChain?
 *********************************
