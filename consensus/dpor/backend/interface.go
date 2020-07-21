@@ -2,7 +2,9 @@ package backend
 
 import (
 	"context"
+	"errors"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -96,6 +98,28 @@ type ChainBackend interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
 	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
+}
+
+// ImpeachedProposer returns the impeached proposer of a header if the block is an impeach block
+func ImpeachedProposer(header *types.Header) (common.Address, error) {
+
+	if header == nil || header.Number == nil {
+		return common.Address{}, errors.New("invalid header to retrieve the impeached proposer")
+	}
+
+	if !header.Impeachment() {
+		return common.Address{}, errors.New("cannot retrieve impeached proposer from an non-impeach block header")
+	}
+
+	blockNumber := header.Number.Uint64()
+	viewLen, termLen := configs.ChainConfigInfo().Dpor.ViewLen, configs.ChainConfigInfo().Dpor.TermLen
+	proposerIndex := ((blockNumber - 1) % (viewLen * termLen)) % termLen
+
+	if len(header.Dpor.Proposers) != int(termLen) {
+		return common.Address{}, errors.New("invalid header.Dpor.Proposers list, length is not" + strconv.Itoa(int(termLen)))
+	}
+
+	return header.Dpor.Proposers[proposerIndex], nil
 }
 
 // ContractBackend is the contract client operation interface

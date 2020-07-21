@@ -692,7 +692,175 @@ It returns the balance according to the wallet address.
     }
 
 
+RNode API
+*******************
 
+eth_getRNodes
++++++++++++++++++
+
+It returns the list of current RNodes.
+
+**Parameters**
+
+None
+
+
+
+**Returns**
+
+``Object`` - RNodes list object.
+
+    ``Address``: DATA, 20 Bytes - The address of an RNodes.
+
+    ``Rpt`` - QUANTITY - The RPT value of this address.
+
+    ``Status`` - QUANTITY either 1 (success) or 0 (failure).
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getRNodes","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": [
+            {
+                "Address": "0xda249468699c339afa51f39b006d124f18c510c7",
+                "Rpt": 4430,
+                "Status": 1
+            },
+            // A bunch of RNodes here.
+            {
+                "Address": "0x6fed6a92227ae1d6793cce4c03f43df3262528cd",
+                "Rpt": 6430,
+                "Status": 1
+            }
+        ]
+    }
+
+
+eth_getCurrentTerm
++++++++++++++++++++
+
+It returns the current term.
+
+**Parameters**
+
+None
+
+
+**Returns**
+
+``QUANTITY`` - The value of the current term. It equals to :math:`H/36`, where :math:`H` is the current block height.
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCurrentTerm","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": 31446
+    }
+
+eth_getCurrentView
++++++++++++++++++++
+
+It returns the current view.
+
+**Parameters**
+
+None
+
+
+**Returns**
+
+``QUANTITY`` - The value of the current view. which can be 0, 1 or 2.
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getCurrentView","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": 1
+    }
+
+
+eth_getBlockGenerationInfo
+++++++++++++++++++++++++++++++
+
+It returns the general information of the block.
+
+**Parameters**
+
+None
+
+
+**Returns**
+
+``Object`` - Block general info object.
+
+    ``ProposerIndex``: QUANTITY - The index of current proposer of this term.
+
+    ``View``: QUANTITY - The current view.
+
+    ``Term``: QUANTITY - The current term.
+
+    ``Proposer``: DATA - The address of current proposer.
+
+    ``TermLen``: QUANTITY - The number of proposers in a term.
+
+    ``Proposers``: Object - A list of proposer addresses.
+
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockGenerationInfo","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+            "ProposerIndex": 8,
+            "View": 0,
+            "Term": 31448,
+            "Proposer": "0x0520523d8a4589f5c1d82cf59a85a300449d7840",
+            "BlockNumber": 1132137,
+            "TermLen": 12,
+            "Proposers": [
+                "0x9508e430ce672750bcf6bef9c4c0adf303b28c5c",
+                "0xac9adf73a63e212aec39fb71d5dbd4ae7b1b74a9",
+                "0xd8353bb4bd66bc8a2506cad2ee917a13d6f38f24",
+                "0x403c07911e16f3a0c79bb4230115c559738d577f",
+                "0xeb5db36e3639e6dad26376b92a87d9b6f7b477b5",
+                "0x5a55d5ef67c047b5d748724f7401781ed0af65ed",
+                "0xa7537f13ff856a120b067387e0d1b92feddd728e",
+                "0x73ae2b32ef3fad80707d4da0f49c675d3efc727c",
+                "0x0520523d8a4589f5c1d82cf59a85a300449d7840",
+                "0x31dcb3e1e8d5f732d3626933dde8b8e739bc8166",
+                "0x8ab63651e6ce7eed40af33276011a5e2e1a533a2",
+                "0x6093ed380b7c8e6c201d8fc4d41ebbf15788f7fe"
+            ]
+        }
+    }
 
 
 Version API

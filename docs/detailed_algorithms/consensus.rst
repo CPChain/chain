@@ -131,7 +131,9 @@ Impeachment Steps
 
 1. A validator :math:`v` in the committee generates an impeachment block
     i. In the header of this block, the *timestamp* is set to be :math:`previousBlockTimestamp+period+timeout`.
-    #. Here :math:`previousBlockTimestamp` is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+    #. Here :math:`previousBlockTimestamp` is the timestamp of block proposed in previous block height.
+    #. The term :math:`period` is the interval between two blocks.
+    #. And :math:`timeout` is the threshold validator that triggers impeachment.
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.

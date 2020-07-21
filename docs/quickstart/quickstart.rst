@@ -34,6 +34,13 @@ Refer to `Download page`_ for latest binary releases of CPChain.
 
 ``cpchain`` is the binary release for the chain.
 
+In principle, version 0.a.b is compatible with version 0.a.c, where a, b, c, are natural numbers.
+For example 0.4.8 is compatible with 0.4.6.
+The word **"compatible"** here means no conflicts in the level of consensus,
+but older versions certainly contain more bugs and lack new features.
+
+Thus, We **strongly** encourage the users to adopt the latest version.
+But it is feasible to downgrade to a previous compatible version to circumvent certain bugs in the newer ones.
 
 
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.

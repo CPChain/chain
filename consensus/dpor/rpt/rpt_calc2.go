@@ -13,13 +13,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// RptCollectorImpl implements RptCollector
-type RptCollectorImpl struct {
+const (
+	impeachPunishmentWindowSize = 10000
+	maxAllowedImpeachedBlocks   = 9
+)
+
+// CollectorImpl2 implements RptCollector
+type CollectorImpl2 struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
 	balances     *rptDataCache
 	txs          *rptDataCache
 	mtns         *rptDataCache
+
+	impeachHistory impeachHistory
 
 	alpha int64
 	beta  int64
@@ -33,10 +40,10 @@ type RptCollectorImpl struct {
 	lock       sync.RWMutex
 }
 
-// NewRptCollectorImpl creates an RptCollectorImpl6
-func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl {
+// NewCollectorImpl2 creates an CollectorImpl2
+func NewCollectorImpl2(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *CollectorImpl2 {
 
-	return &RptCollectorImpl{
+	return &CollectorImpl2{
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
 		balances:     newRptDataCache(),
@@ -55,7 +62,7 @@ func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainB
 }
 
 // Alpha returns the coefficient of balance(coin age)
-func (rc *RptCollectorImpl) Alpha(num uint64) int64 {
+func (rc *CollectorImpl2) Alpha(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -73,7 +80,7 @@ func (rc *RptCollectorImpl) Alpha(num uint64) int64 {
 }
 
 // Beta returns the coefficient of transaction count
-func (rc *RptCollectorImpl) Beta(num uint64) int64 {
+func (rc *CollectorImpl2) Beta(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -91,7 +98,7 @@ func (rc *RptCollectorImpl) Beta(num uint64) int64 {
 }
 
 // Gamma returns the coefficient of Maintenance
-func (rc *RptCollectorImpl) Gamma(num uint64) int64 {
+func (rc *CollectorImpl2) Gamma(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -109,7 +116,7 @@ func (rc *RptCollectorImpl) Gamma(num uint64) int64 {
 }
 
 // Psi returns the coefficient of File Contribution
-func (rc *RptCollectorImpl) Psi(num uint64) int64 {
+func (rc *CollectorImpl2) Psi(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -127,7 +134,7 @@ func (rc *RptCollectorImpl) Psi(num uint64) int64 {
 }
 
 // Omega returns the coefficient of Proxy Information in Pdash
-func (rc *RptCollectorImpl) Omega(num uint64) int64 {
+func (rc *CollectorImpl2) Omega(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -145,7 +152,7 @@ func (rc *RptCollectorImpl) Omega(num uint64) int64 {
 }
 
 // WindowSize returns the windown size when calculating reputation value
-func (rc *RptCollectorImpl) WindowSize(num uint64) int {
+func (rc *CollectorImpl2) WindowSize(num uint64) int {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -162,12 +169,12 @@ func (rc *RptCollectorImpl) WindowSize(num uint64) int {
 	return rc.windowSize
 }
 
-func (rc *RptCollectorImpl) coefficients(num uint64) (int64, int64, int64, int64, int64) {
+func (rc *CollectorImpl2) coefficients(num uint64) (int64, int64, int64, int64, int64) {
 	return rc.Alpha(num), rc.Beta(num), rc.Gamma(num), rc.Psi(num), rc.Omega(num)
 }
 
 // RptOf returns the reputation value of a given address among a batch addresses
-func (rc *RptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
+func (rc *CollectorImpl2) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
 
 	windowSize := rc.WindowSize(num)
 	alpha, beta, gamma, psi, omega := rc.coefficients(num)
@@ -176,7 +183,15 @@ func (rc *RptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, n
 	}
 
 	rpt := int64(0)
-	rpt = alpha*rc.BalanceValueOf(addr, addrs, num, windowSize) + beta*rc.TxsValueOf(addr, addrs, num, windowSize) + gamma*rc.MaintenanceValueOf(addr, addrs, num, windowSize) + psi*rc.UploadValueOf(addr, addrs, num, windowSize) + omega*rc.ProxyValueOf(addr, addrs, num, windowSize)
+	punishment := rc.ImpeachPunishment(addr, addrs, num)
+	rpt = alpha*rc.BalanceValueOf(addr, addrs, num, windowSize) +
+		beta*rc.TxsValueOf(addr, addrs, num, windowSize) +
+		gamma*rc.MaintenanceValueOf(addr, addrs, num, windowSize) +
+		psi*rc.UploadValueOf(addr, addrs, num, windowSize) +
+		omega*rc.ProxyValueOf(addr, addrs, num, windowSize)
+
+	// decrease the rpt value according to the impeach history
+	rpt = int64(float32(rpt) * punishment)
 
 	if rpt < defaultMinimumRptValue {
 		rpt = defaultMinimumRptValue
@@ -185,38 +200,73 @@ func (rc *RptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, n
 	return Rpt{Address: addr, Rpt: rpt}
 }
 
+func impeachPunishRatio(impeachedNumber int) float32 {
+	if impeachedNumber <= 0 {
+		return 1
+	}
+
+	if impeachedNumber > maxAllowedImpeachedBlocks {
+		return 0
+	}
+
+	return 1. - float32(impeachedNumber)/maxAllowedImpeachedBlocks
+}
+
+// ImpeachPunishment returns the decline ratio according to the impeachment history of the rnode.
+// the returned values are in [0., 1/n, 2/n, ..., (n-1)/n, 1] where n equals to `maxAllowedImpeachedBlocks`.
+func (rc *CollectorImpl2) ImpeachPunishment(addr common.Address, addrs []common.Address, num uint64) float32 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+
+	// if the impeachHistory is nil, then it must be at initialization state, create an instance
+	if rc.impeachHistory == nil {
+		rc.impeachHistory = newImpeachHistoryImpl(num, rc.chainBackend)
+	}
+
+	// rpt is calculated periodically, so it is needed to update all of those impeach status
+	// from last update time on.
+	rc.impeachHistory.addHistories(rc.impeachHistory.currentNumber(), num, rc.chainBackend)
+
+	// now that impeach history is already updated, count the impeached blocks from the outset on
+	count := rc.impeachHistory.countHistory(addr)
+	punishment := impeachPunishRatio(count)
+
+	log.Debug("punishment", "p", punishment, "addr", addr.Hex(), "num", num, "count", count)
+	return punishment
+}
+
 // BalanceValueOf returns Balance Value of reputation
-func (rc *RptCollectorImpl) BalanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) BalanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.BalanceInfoOf(addr, addrs, num, windowSize)
 	return rank
 }
 
 // TxsValueOf returns Transaction Count of reputation
-func (rc *RptCollectorImpl) TxsValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) TxsValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.TxsInfoOf(addr, addrs, num, windowSize)
 	return rank
 }
 
 // MaintenanceValueOf returns Chain Maintenance of reputation
-func (rc *RptCollectorImpl) MaintenanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) MaintenanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.MaintenanceInfoOf(addr, addrs, num, windowSize)
 	return rank
 }
 
 // UploadValueOf returns File Contribution of reputation
-func (rc *RptCollectorImpl) UploadValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) UploadValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.UploadInfoOf(addr, addrs, num, windowSize)
 	return rank
 }
 
 // ProxyValueOf returns Proxy Information of PDash of reputation
-func (rc *RptCollectorImpl) ProxyValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) ProxyValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.ProxyInfoOf(addr, addrs, num, windowSize)
 	return rank
 }
 
 // BalanceInfoOf minor
-func (rc *RptCollectorImpl) BalanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) BalanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
 	getBalance := func(address common.Address, number uint64) uint64 {
@@ -248,7 +298,7 @@ func (rc *RptCollectorImpl) BalanceInfoOf(addr common.Address, addrs []common.Ad
 }
 
 // TxsInfoOf minor
-func (rc *RptCollectorImpl) TxsInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) TxsInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
 	getTxCount := func(address common.Address, number uint64) int64 {
@@ -288,7 +338,7 @@ func (rc *RptCollectorImpl) TxsInfoOf(addr common.Address, addrs []common.Addres
 }
 
 // MaintenanceInfoOf minor
-func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) MaintenanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
 	getMtn := func(addr common.Address, num uint64) int64 {
@@ -328,13 +378,13 @@ func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, addrs []commo
 }
 
 // UploadInfoOf minor
-func (rc *RptCollectorImpl) UploadInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) UploadInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
 	return 0
 }
 
 // ProxyInfoOf minor
-func (rc *RptCollectorImpl) ProxyInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *CollectorImpl2) ProxyInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
 	return 0
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -201,4 +202,13 @@ func WaitMined(client *cpclient.Client, tx *types.Transaction) error {
 		return cli.NewExitError("receipt status is "+string(receipt.Status), 1)
 	}
 	return nil
+}
+
+// PrintBalance print balance of the address
+func PrintBalance(client *cpclient.Client, fromAddress common.Address) {
+	fromValue, err := client.BalanceAt(context.Background(), fromAddress, nil)
+	if err != nil {
+		log.Info("get from balance failed", "address", fromAddress.Hex())
+	}
+	log.Infof("balance: %v [wei],\tabout %v [cpc] in address: %x", fromValue, new(big.Int).Div(fromValue, big.NewInt(configs.Cpc)), fromAddress)
 }

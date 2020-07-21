@@ -10,6 +10,29 @@ If you find any questions unlisted here,
 please raise an issue on our `Issue Page`_.
 
 
+How to stop mining and get my CPC back?
+*************************************************
+
+1. Start CPChain program with command if you don't have a running cpchain node.
+
+.. code-block:: bash
+
+    ./cpchain run \
+    --unlock WALLET_ADDRESS \
+    --rpcaddr 127.0.0.1:8501 --mine \
+    --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner"
+        
+    # `--rpcaddr` and `--rpcapi` must be made available.
+    # your default datadir is `$HOME/.cpchain` and you can add `--datadir` to specify your datadir
+
+2. Wait for data synchronization to complete.
+3. open another console and type command
+
+.. code-block:: bash
+
+    ./cpchain campaign stop --keystore YOUR_KEYSTORE_DIR --rpc 127.0.0.1:8501
+
+:code:`YOUR_KEYSTORE_DIR` must add :code:`/`，e.g.: :code:`./datadir/keystore/`
 
 How to interact with CPChain?
 *********************************
@@ -244,3 +267,75 @@ and compare the value with the one on `Download Page`_.
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
 .. _`Checksum Page`: https://emn178.github.io/online-tools/sha256_checksum.html
+
+How to reduce the disk usage of ``cpchain``?
+************************************************
+
+From version 0.4.8, two commands are provided to delete useless files in ``cpchain`` folder.
+Please type the following two commands in order.
+
+.. code-block:: shell
+
+    ./cpchain chain delete dpor-
+    ./cpchain chain compact
+
+.. note::
+
+    i) You can use the flag ``--datadir`` to indicate your ``cpchain`` folder
+    if your node is not stored in the default directory.
+
+    ii) The ``chain delete dpor-`` command does not shrink disk usage directly.
+    It traverses all cpchain files and labels redundant and obsolete files.
+
+    iii) The ``chain compact`` command then compacts files
+    following the labels done by ``chain delete dpor-`` command.
+
+    iv) Both commands can be rather time consuming.
+    The process time is estimated to around 20 minutes for each command.
+
+    v) Note that there is a **hyphen** following ``dpor`` in ``chain delete dpor-`` command.
+    The argument ``dpor-`` indicates the prefix of file  names.
+    Other arguments rather than ``dpor-`` may lead to **unexpected results**.
+
+    vi) Also note that both commands **can only** be executed when the chain is stopped.
+    An error will be raised if you execute either command for a running node.
+
+Is ``sudo`` needed to run ``cpchain``?
+********************************************
+
+In principle, ``sudo`` (or administrator privileges) is not required to run ``cpchain``.
+However, some users may encounter error message indicating a denied permission.
+Here we list some possible reasons accounting for this problem:
+
+**1. The root user and normal user have different default folders of** ``cpchain`` **.**
+
+Thus, if you run ``cpchain`` as root for the first time (e.g., using ``sudo``),
+you have to use ``--datadir`` to refer to the ``cpchain`` folder as a normal user.
+
+**2. Write into a log file that requires root privilege.**
+
+Some users (e.g., ones using ``nohup``) utilize ``>`` to redirect the output of ``cpchain`` to a log file.
+If the log file can only be written as root (e.g., in a root-privileged folder),
+this redirection will lead to a failure in launching ``cpchain``.
+
+You can either use the ``chmod`` command to change the permissions of the log file,
+or redirect the output to other log file that you can access.
+
+
+
+Which version is compatible with the latest one?
+**************************************************
+
+**We strongly encourage the users to adopt the latest version!**
+
+In principle version 0.a.b is compatible with version 0.a.c, where a, b, c, are natural numbers.
+For example 0.4.8 is compatible with 0.4.6.
+
+The word **"compatible"** here means no conflicts in the level of consensus,
+but older versions certainly contain more bugs and lack new features.
+Thus, we highly recommend the user to keep the ``cpchain`` file updated to the latest version.
+
+Nevertheless, it is feasible to downgrade to a previous compatible version to
+circumvent certain bugs in the newer ones.
+Downgrading should be only considered as an expedient.
+And please update ``cpchain`` if the bug is solved.

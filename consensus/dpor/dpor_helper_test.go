@@ -332,10 +332,56 @@ func Test_defaultDporHelper_verifyHeader(t *testing.T) {
 
 }
 
+func Test_defaultDporHelper_verifyHeaderWithParameters(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 4, TermLen: 24, ViewLen: 4, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	genesis := d.chain.GetHeaderByNumber(0)
+	err := d.dh.verifyHeader(d, d.chain, genesis, nil, newHeader(), true, true)
+	if err != nil {
+		t.Error("Call verifyHeader failed...")
+	}
+	err1 := dph.verifyBasic(d, d.chain, genesis, nil, newHeader())
+	if err1 != nil {
+		t.Error("Call verifyBasic failed...")
+	}
+	err2 := d.dh.verifySignatures(d, d.chain, newHeader(), nil, nil)
+	if err2 != nil {
+		t.Error("Call verifySignatures failed...")
+	}
+
+}
+
 func Test_defaultDporHelper_verifyBasic(t *testing.T) {
 	dph := &defaultDporHelper{&defaultDporUtil{}}
 	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
 	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	// Check status
+	err1 := dph.verifyBasic(d, d.chain, newHeader(), nil, nil)
+	fmt.Println(err1)
+	if err1 != nil {
+		t.Error("Call ValidateBlock check status failed...")
+	}
+	// Check Parent header:
+	d.mode = NormalMode
+	err2 := d.dh.verifyBasic(d, d.chain, newHeader(), nil, nil)
+	errUnknownAncestor := errors.New("unknown ancestor")
+	equalSigner := reflect.DeepEqual(err2, errUnknownAncestor)
+	if !equalSigner {
+		t.Error("Call ValidateBlock failed...")
+	}
+}
+
+func Test_defaultDporHelper_verifyBasicWithParameters(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 24, ViewLen: 6, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
 	d.mode = FakeMode
 	d.chain = newBlockchain(888)
 	d.dh = dph

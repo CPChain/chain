@@ -48,6 +48,7 @@ var (
 	rptAddr         common.Address
 )
 
+// create a simulated blockchain with n blocks
 func newBlockchain(n int) *core.BlockChain {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -55,13 +56,16 @@ func newBlockchain(n int) *core.BlockChain {
 	genesis := gspec.MustCommit(db)
 	config := gspec.Config
 	dporConfig := config.Dpor
+	// fake a dpor engine
 	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	// generate blocks
 	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, nil)
 	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
 	_, _ = blockchain.InsertChain(blocks)
 	return blockchain
 }
 
+// create blockchain with n blocks and some accounts
 func newBlockchainWithBalances(n int, accounts []common.Address) *core.BlockChain {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -131,6 +135,7 @@ func generateABatchAccounts(n int) []common.Address {
 	return addresses
 }
 
+// benchs of default parameters
 func BenchmarkRptOf_10a(b *testing.B) {
 	benchRptOf(b, 10)
 }
@@ -154,7 +159,7 @@ func benchRptOf(b *testing.B, numAccount int) {
 	addrs := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollector(1000)
 
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range addrs {
 		rpt := rptCollector.RptOf(addr, addrs, 500)
 		b.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
@@ -244,7 +249,7 @@ func benchBalanceValueOf(b *testing.B, blocknum int) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
 		b.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
@@ -273,7 +278,7 @@ func benchTxsValueOf(b *testing.B, blocknum int) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.TxsValueOf(addr, accounts, 500, windowNum)
 		b.Log("idx", i, "Txs Value of reputation", rank, "addr", addr.Hex())
@@ -298,7 +303,7 @@ func benchMaintenanceValueOf(b *testing.B, blocknum int) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.MaintenanceValueOf(addr, accounts, 500, windowNum)
 		b.Log("idx", i, "Maintenance Value of reputation", rank, "addr", addr.Hex())
@@ -323,7 +328,7 @@ func benchUploadValueOf(b *testing.B, blocknum int) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.UploadValueOf(addr, accounts, 500, windowNum)
 		b.Log("idx", i, "Upload Value of reputation", rank, "addr", addr.Hex())
@@ -348,7 +353,7 @@ func benchProxyValueOf(b *testing.B, blocknum int) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.ProxyValueOf(addr, accounts, 500, windowNum)
 		b.Log("idx", i, "Proxy Value of reputation", rank, "addr", addr.Hex())
@@ -433,7 +438,6 @@ func newBlockchainWithDb(n int, addrs []common.Address) (common.Address, *backen
 	return rptAddr, backend, rptContract
 }
 
-
 //unit testcase:
 //Testcase of rpt_calc:
 func TestRptOf4(t *testing.T) {
@@ -442,7 +446,7 @@ func TestRptOf4(t *testing.T) {
 	windowNum := rand.Intn(10000)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
 		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
@@ -454,17 +458,15 @@ func TestPrint(t *testing.T) {
 	accounts := generateABatchAccounts(10)
 
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
-	for i,addr:=range accounts{
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
+	for i, addr := range accounts {
 		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
 		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
 	}
 	newAddr := common.HexToAddress("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
 	rank := rptCollector.BalanceValueOf(newAddr, accounts, 500, windowNum)
-	t.Log("This didn't match address :","Balance Value of reputation", rank, "addr", newAddr.Hex())
+	t.Log("This didn't match address :", "Balance Value of reputation", rank, "addr", newAddr.Hex())
 }
-
-
 
 func TestBalanceValueOf(t *testing.T) {
 	numAccount := 5
@@ -472,7 +474,7 @@ func TestBalanceValueOf(t *testing.T) {
 	windowNum := rand.Intn(100)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.BalanceValueOf(addr, accounts, 50, windowNum)
 		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
@@ -485,7 +487,7 @@ func TestTxsValueOf(t *testing.T) {
 	windowNum := rand.Intn(100)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.TxsValueOf(addr, accounts, 50, windowNum)
 		t.Log("idx", i, "Transaction Count of reputation", rank, "addr", addr.Hex())
@@ -498,7 +500,7 @@ func TestMaintenanceValueOf(t *testing.T) {
 	windowNum := rand.Intn(100)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.MaintenanceValueOf(addr, accounts, 50, windowNum)
 		t.Log("idx", i, "Chain Maintenance of reputation", rank, "addr", addr.Hex())
@@ -511,7 +513,7 @@ func TestUploadValueOf(t *testing.T) {
 	windowNum := rand.Intn(10)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.UploadValueOf(addr, accounts, 5, windowNum)
 		t.Log("idx", i, "File Contribution of reputation", rank, "addr", addr.Hex())
@@ -524,7 +526,7 @@ func TestProxyValueOf(t *testing.T) {
 	windowNum := rand.Intn(10)
 	accounts := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
-	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
 	for i, addr := range accounts {
 		rank := rptCollector.ProxyValueOf(addr, accounts, 5, windowNum)
 		t.Log("idx", i, "Proxy Information of PDash of reputation", rank, "addr", addr.Hex())
@@ -534,7 +536,7 @@ func TestProxyValueOf(t *testing.T) {
 //Test the input format of every account
 func TestFormatString(t *testing.T) {
 	accounts := generateABatchAccounts(5)
-	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	contractAddr, backend, _ := newBlockchainWithDb(6, accounts)
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
 	rpts := rptInstance.CalcRptInfoList(accounts, 6)
 	t.Log("rpt result", "rpts", rpts.FormatString())
@@ -543,7 +545,7 @@ func TestFormatString(t *testing.T) {
 
 func TestAddrs(t *testing.T) {
 	accounts := generateABatchAccounts(5)
-	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	contractAddr, backend, _ := newBlockchainWithDb(6, accounts)
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
 	rpts := rptInstance.CalcRptInfoList(accounts, 6)
 	t.Log("rpt result", "rpts", rpts.Addrs())
@@ -551,7 +553,7 @@ func TestAddrs(t *testing.T) {
 
 func TestSwapAndLess(t *testing.T) {
 	accounts := generateABatchAccounts(6)
-	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	contractAddr, backend, _ := newBlockchainWithDb(6, accounts)
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
 	rpts := rptInstance.CalcRptInfoList(accounts, 6)
 	t.Log("rpt result", "rpts'format", rpts.FormatString(), "before is less or not?", rpts.Less(0, 1))
@@ -582,29 +584,49 @@ func TestPctCount(t *testing.T) {
 }
 
 //testcase of rpt.go:
-func TestTotalSeats(t *testing.T){
+func TestTotalSeats(t *testing.T) {
 	numAccount := 100
 	accounts := generateABatchAccounts(numAccount)
 	_, backend, _ := newBlockchainWithDb(1000, accounts)
 	rptInstance, _ := rpt.NewRptService(common.HexToAddress("dhsjhdak"), backend)
-	abLowrptseats,_:=rptInstance.LowRptSeats()
-	t.Log("Abnormal situation ,not call contract:",abLowrptseats)
+	abLowrptseats, _ := rptInstance.LowRptSeats()
+	t.Log("Abnormal situation ,not call contract:", abLowrptseats)
 	contractAddr, backend, _ := newBlockchainWithDb(1000, accounts)
 	rptInstance2, _ := rpt.NewRptService(contractAddr, backend)
-	lowrptseats,_:=rptInstance2.LowRptSeats()
-	t.Log("Normal situation, call contract:",lowrptseats)
+	lowrptseats, _ := rptInstance2.LowRptSeats()
+	t.Log("Normal situation, call contract:", lowrptseats)
 }
 
-
-func TestLowRptCount(t *testing.T){
+func TestLowRptCount(t *testing.T) {
 	numAccount := 100
 	accounts := generateABatchAccounts(numAccount)
 	contractAddr, backend, _ := newBlockchainWithDb(1000, accounts)
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
-	lowrptsum:=rptInstance.LowRptCount(77)
-	t.Log("Low Rpt sum seats is:",lowrptsum)
+	lowrptsum := rptInstance.LowRptCount(77)
+	t.Log("Low Rpt sum seats is:", lowrptsum)
 }
 
+func TestLowRptCount2(t *testing.T) {
+	numAccount := 1000
+	accounts := generateABatchAccounts(numAccount)
+	contractAddr, backend, _ := newBlockchainWithDb(500, accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	lowrptsum := rptInstance.LowRptCount(77)
+	if lowrptsum != 38 {
+		t.Errorf("Expected %v, but got %v", 38, lowrptsum)
+	}
+	t.Log("Low Rpt sum seats is:", lowrptsum)
+}
 
-
-
+func TestTxsValueWhenWindowNumIs1000(t *testing.T) {
+	numAccount := 5
+	numBlocks := 100
+	windowNum := 1000
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.TxsValueOf(addr, accounts, 50, windowNum)
+		t.Log("idx", i, "Transaction Count of reputation", rank, "addr", addr.Hex())
+	}
+}

@@ -92,6 +92,13 @@ const (
 	DefaultTestMainnetMaxInitBlockNumber = 180
 )
 
+// NewRptWithImpeachPunishmentPivotBlockNumber is a block number used to denote the
+// start point from which the new rpt method is used to do elections.
+// The new rpt calc method considers to punish those impeached reputation nodes.
+const (
+	NewRptWithImpeachPunishmentPivotBlockNumber = 1244472
+)
+
 const (
 	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
 )
@@ -115,8 +122,8 @@ const (
 
 // some version numbers
 const (
-	RnodeVersion    = 1
-	CampaignVersion = 1
+	RnodeVersion    = 2
+	CampaignVersion = 2
 )
 
 var (
