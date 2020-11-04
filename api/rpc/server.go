@@ -386,6 +386,7 @@ func (s *Server) readRequest(codec ServerCodec) ([]*serverRequest, bool, Error) 
 	for i, r := range reqs {
 		var ok bool
 		var svc *service
+		log.Debug("handle rpc req", "method", r.method, "service", r.service)
 
 		if r.err != nil {
 			requests[i] = &serverRequest{id: r.id, err: r.err}

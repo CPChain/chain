@@ -540,6 +540,12 @@ func (s *PublicBlockChainAPI) GetChainConfig() configs.ChainConfig {
 	return *cfg
 }
 
+// ChainId returns chain ID of current blockchain
+func (s *PublicBlockChainAPI) ChainId() hexutil.Uint64 {
+	cfg := s.b.ChainConfig()
+	return hexutil.Uint64(cfg.ChainID.Int64())
+}
+
 func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 	committeeNumber := s.b.CommitteMember()
 	return len(committeeNumber)
