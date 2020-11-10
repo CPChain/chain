@@ -369,6 +369,7 @@ Cpc.sendTransaction
 
     The ``transaction`` parameter should be a dictionary with the following fields.
 
+    * ``type``: ``integer``, the type of this transaction which should be set to 0.
     * ``from``: ``bytes or text``, hex address or ENS name - (optional, default:
       ``cpc_fusion.cpc.defaultAccount``) The address the transaction is send from.
     * ``to``: ``bytes or text``, hex address or ENS name - (optional when creating new
@@ -413,12 +414,14 @@ Cpc.sendRawTransaction
     .. code-block:: python
 
         >>> signed_txn = cf.cpc.account.signTransaction(dict(
+            type=0,
             nonce=cf.cpc.getTransactionCount(cf.cpc.coinbase),
             gasPrice=cf.cpc.gasPrice,
             gas=100000,
             to='0xd3cda913deb6f67967b99d67acdfa1712c293601',
             value=12345,
             data=b'',
+            chainId=337,
           ),
           private_key_for_senders_account,
         )
