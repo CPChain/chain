@@ -89,7 +89,7 @@ var GeneralFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  RunModeFlagName,
-		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet",
+		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet|mini",
 	},
 }
 

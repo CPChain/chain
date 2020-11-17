@@ -306,6 +306,8 @@ func DefaultGenesisBlock() *Genesis {
 		return newTestMainnetGenesisBlock()
 	case configs.IsTestcase():
 		return newGenesisBlock()
+	case configs.IsMini():
+		return newMininetGenesisBlock()
 	default:
 		return newGenesisBlock()
 	}
@@ -332,6 +334,27 @@ func newGenesisBlock() *Genesis {
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: new(big.Int).Mul(big.NewInt(800000000), big.NewInt(configs.Cpc))}, // contract admin account
+		},
+		Dpor: types.DporSnap{
+			Proposers:  configs.Proposers(),
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsNumber),
+			Validators: configs.Validators(),
+		},
+	}
+}
+
+func newMininetGenesisBlock() *Genesis {
+	candidates := configs.Candidates()
+	return &Genesis{
+		Config:     configs.ChainConfigInfo(),
+		Timestamp:  1492009146000,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   configs.DefaultGasLimitPerBlock,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"): {Balance: new(big.Int).Mul(big.NewInt(800000000), big.NewInt(configs.Cpc))}, // contract admin account
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),

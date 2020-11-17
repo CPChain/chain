@@ -50,6 +50,7 @@ const (
 )
 
 const (
+	MiniChainId        = 40
 	DevChainId         = 41
 	MainnetChainId     = 337
 	TestMainnetChainId = 42
@@ -61,19 +62,29 @@ const (
 	TestMainnetNetworkId = 0
 	DevNetworkId         = 1
 	TestnetNetworkId     = 2
+	MiniNetworkId        = 3
 )
 
 const (
-	DefaultBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
-	TestnetBlockPeriod     = 3e3 //  3000 Millisecond, 3 Second
-	MainnetBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
-	TestMainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
+	// MiniBlockPeriod 300 Millisecond, 3 second
+	MiniBlockPeriod = 3e3
+	// DefaultBlockPeriod 10000 Millisecond, 10 Second
+	DefaultBlockPeriod = 1e4
+	// TestnetBlockPeriod 3000 Millisecond, 3 Second
+	TestnetBlockPeriod = 3e3
+	// MainnetBlockPeriod 10000 Millisecond, 10 Second
+	MainnetBlockPeriod = 1e4
+	// TestMainnetBlockPeriod 10000 Millisecond, 10 Second
+	TestMainnetBlockPeriod = 1e4
 
+	// MiniFaultyValidatorsNumber the number of faulty valiator when use mini mode
+	MiniFaultyValidatorsNumber        = 1
 	DefaultFaultyValidatorsNumber     = 1
 	TestnetFaultyValidatorsNumber     = 1
 	MainnetFaultyValidatorsNumber     = 2
 	TestMainnetFaultyValidatorsNumber = 2
 
+	MiniValidatorsNumber        = MiniFaultyValidatorsNumber*3 + 1
 	DefaultValidatorsNumber     = DefaultFaultyValidatorsNumber*3 + 1
 	TestnetValidatorsNumber     = TestnetFaultyValidatorsNumber*3 + 1
 	MainnetValidatorsNumber     = MainnetFaultyValidatorsNumber*3 + 1
@@ -86,6 +97,7 @@ const (
 )
 
 const (
+	MiniMaxInitBlockNumber               = 2147483647
 	DefaultDevMaxInitBlockNumber         = 180
 	DefaultTestnetMaxInitBlockNumber     = 240
 	DefaultMainnetMaxInitBlockNumber     = 180
@@ -133,6 +145,7 @@ var (
 		Mainnet:     mainnetChainConfig,
 		TestMainnet: testMainnetChainConfig,
 		Testcase:    devChainConfig,
+		Mini:        miniChainConfig,
 	}
 
 	proposersMap = map[RunMode][]common.Address{
@@ -141,6 +154,7 @@ var (
 		Mainnet:     mainnetProposers,
 		TestMainnet: testMainnetProposers,
 		Testcase:    devProposers,
+		Mini:        miniProposers,
 	}
 
 	candidatesMap = map[RunMode][]common.Address{
@@ -149,6 +163,7 @@ var (
 		Mainnet:     mainnetDefaultCandidates,
 		TestMainnet: testMainnetDefaultCandidates,
 		Testcase:    devDefaultCandidates,
+		Mini:        miniDefaultCandidates,
 	}
 
 	validatorsMap = map[RunMode][]common.Address{
@@ -157,6 +172,7 @@ var (
 		Mainnet:     mainnetValidators,
 		TestMainnet: testMainnetValidators,
 		Testcase:    devValidators,
+		Mini:        miniValidators,
 	}
 
 	bootnodesMap = map[RunMode][]string{
@@ -165,6 +181,7 @@ var (
 		Mainnet:     mainnetBootnodes,
 		TestMainnet: testMainnetBootnodes,
 		Testcase:    devBootnodes,
+		Mini:        miniBootnodes,
 	}
 
 	defaultValidatorNodesMap = map[RunMode][]string{
@@ -173,6 +190,7 @@ var (
 		Mainnet:     defaultMainnetValidatorNodes,
 		TestMainnet: defaultTestMainnetValidatorNodes,
 		Testcase:    defaultDevValidatorNodes,
+		Mini:        defaultMiniValidatorNodes,
 	}
 )
 
