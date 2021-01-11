@@ -4,6 +4,9 @@
 !.git/refs/heads
 **/*_test.go
 
+.vscode
+
 build/_workspace
 build/_bin
+build/bin/data-fast
 tests/testdata
