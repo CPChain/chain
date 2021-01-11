@@ -4,8 +4,14 @@
 	"package": [
 		{
 			"checksumSHA1": "24EW3PGLGVSy/5joAOZdHzN/S2E=",
-			"path": "github.com/Azure/azure-storage-go",
-			"revision": "12ccaadb081cdd217702067d28da9a7ff4305239",
+			"path": "github.com/Azure/azure-sdk-for-go",
+			"revision": "088007b3b08cc02b27f2eadfdcd870958460ce7e",
+			"revisionTime": "2017-03-02T22:15:08Z"
+		},
+		{
+			"checksumSHA1": "24EW3PGLGVSy/5joAOZdHzN/S2E=",
+			"path": "github.com/Azure/azure-sdk-for-go/storage",
+			"revision": "088007b3b08cc02b27f2eadfdcd870958460ce7e",
 			"revisionTime": "2017-03-02T22:15:08Z"
 		},
 		{
@@ -41,14 +47,15 @@
 		},
 		{
 			"checksumSHA1": "7Zq41q7RBgwR6XSfTK/yl756I2Y=",
-			"path": "github.com/beorn7",
-			"revision": "",
+			"path": "github.com/beorn7/perks",
+			"revision": "37c8de3658fcb183f997c4e13e8337516ab753e6",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "gZQ6HheWahvZzIc3phBnOwoWHjE=",
 			"path": "github.com/btcsuite/btcd/btcec",
-			"revision": ""
+			"revision": "583684b21bfbde9b5fc4403916fd7c807feb0289",
+			"revisionTime": "2017-02-18T06:46:40Z"
 		},
 		{
 			"checksumSHA1": "cDMtzKmdTx4CcIpP4broa+16X9g=",
@@ -77,60 +84,60 @@
 		{
 			"checksumSHA1": "l+j3lTA0RNADknis0xezQbVwids=",
 			"path": "github.com/ethereum/go-ethereum/accounts/usbwallet",
-			"revision": ""
+			"revision": "v1.8.14"
 		},
 		{
 			"checksumSHA1": "4bn0ENrBFhjVnXFpYggXQ2EHMUE=",
 			"path": "github.com/ethereum/go-ethereum/common",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "vSvch7UnnLRnadjJ5fdWKr51FV0=",
 			"path": "github.com/ethereum/go-ethereum/crypto",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "2VFMmam2XKUO5domRGHXXI65Jww=",
 			"path": "github.com/ethereum/go-ethereum/event",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "dIuEFmR0WW88jL1fTFaLUjbZ/ss=",
 			"path": "github.com/ethereum/go-ethereum/les",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "qxDxWexln4vDMcgfI2ag0+CaAnM=",
 			"path": "github.com/ethereum/go-ethereum/log",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "OPu1h8ZR7kvZfCAZxHy9n9xrRUc=",
 			"path": "github.com/ethereum/go-ethereum/metrics",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "LQUj4cUiM6hy9g9C4Wg2bu67124=",
 			"path": "github.com/ethereum/go-ethereum/p2p",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "z90HAmaR1d3Q71bT3FfCb38aPbw=",
 			"path": "github.com/ethereum/go-ethereum/rlp",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "ir2GqN+BwZdOpxDo+dDmhz9DB0w=",
 			"path": "github.com/ethereum/go-ethereum/trie",
-			"revision": "",
+			"revision": "v1.8.14",
 			"tree": true
 		},
 		{
@@ -148,7 +155,8 @@
 		{
 			"checksumSHA1": "KZ3QD2QgUS4RcoKiA3mn5pSlJxQ=",
 			"path": "github.com/go-stack/stack",
-			"revision": ""
+			"revision": "3bd81bdde4686ea4aee961921944d1d012253997",
+			"revisionTime": "2017-07-10T16:04:46Z"
 		},
 		{
 			"checksumSHA1": "2nEUYzHhmnw2o4tFPGDb3/Giz44=",
@@ -166,7 +174,8 @@
 		{
 			"checksumSHA1": "p/8vSviYF91gFflhrt5vkyksroo=",
 			"path": "github.com/golang/snappy",
-			"revision": ""
+			"revision": "553a641470496b2327abcac10b36396bd98e45c9",
+			"revisionTime": "2017-02-15T23:32:05Z"
 		},
 		{
 			"checksumSHA1": "DeCJipQ5LSYKWSQBMkvnM2FtDSU=",
@@ -333,7 +342,7 @@
 		{
 			"checksumSHA1": "q3kmy/C6KtoFqWE/qpKe1D2FkYk=",
 			"path": "github.com/libp2p/go-libp2p-pubsub/pb",
-			"revision": "0b1ae1325d15933ed193e2b0c6e6a9b356ddf14d",
+			"revision": "b96cf6df635722ec55bf65cd23736228dd0f850d",
 			"revisionTime": "2018-08-10T10:51:17Z"
 		},
 		{
@@ -344,8 +353,8 @@
 		},
 		{
 			"checksumSHA1": "fjoxssztxO0Y5yrBRrKlthE0RZw=",
-			"path": "github.com/matttproud",
-			"revision": "",
+			"path": "github.com/matttproud/golang_protobuf_extensions",
+			"revision": "c182affec369e30f25d3eb8cd8a478dee585ae7d",
 			"tree": true
 		},
 		{
@@ -472,7 +481,8 @@
 		{
 			"checksumSHA1": "RWTKDUaawo4OOfExRtnG/YNKtxM=",
 			"path": "github.com/sirupsen/logrus",
-			"revision": ""
+			"revision": "ad15b42461921f1fb3529b058c6786c6a45d5162",
+			"revisionTime": "2018-10-09T19:32:21Z"
 		},
 		{
 			"checksumSHA1": "jAzqolwnRJhHsKXmmvKNrHqxqAw=",
@@ -495,8 +505,8 @@
 		{
 			"checksumSHA1": "TJV50D0q8E3vtc90ibC+qOYdjrw=",
 			"path": "github.com/syndtr/goleveldb/leveldb",
-			"revision": "59047f74db0d042c8d8dd8e30bb030bc774a7d7a",
-			"revisionTime": "2018-05-21T04:45:49Z"
+			"revision": "ae970a0732be3a1f5311da86118d37b9f4bd2a5a",
+			"revisionTime": "2018-05-02T07:23:49Z"
 		},
 		{
 			"checksumSHA1": "EKIow7XkgNdWvR/982ffIZxKG8Y=",
@@ -848,8 +858,8 @@
 		{
 			"checksumSHA1": "NGg7/qIJVUfXi7xnEyyDLocdi6Y=",
 			"path": "gopkg.in/fatih/set.v0",
-			"revision": "27c40922c40b43fe04554d8223a402af3ea333f3",
-			"revisionTime": "2014-12-10T08:48:24Z"
+			"revision": "7b667b7b6a5d81d40a152d968b10e0e873fac404",
+			"revisionTime": "2014-07-15T08:48:24Z"
 		},
 		{
 			"checksumSHA1": "DQXNV0EivoHm4q+bkdahYXrjjfE=",

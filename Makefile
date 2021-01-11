@@ -11,6 +11,8 @@
 .PHONY: docs docs-serve docs-serve-clean docs-clean
 .PHONY: docs-mv-solidity docs-cp-solidity docs-solidity
 
+export GO111MODULE=off
+
 SHELL := $(shell which bash)
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
