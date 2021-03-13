@@ -155,6 +155,82 @@ func TestDpor_GetBlockReward(t *testing.T) {
 	}
 }
 
+func TestDpor_BlockRewardOfMainnet(t *testing.T) {
+	var (
+		mainnetBlockPeriod = 1e4 // 10000 mill 10 second
+		cep1BlocksPerDay   = 24 * 60 * 60 * 1000 / int64(mainnetBlockPeriod)
+
+		// Blocks produce per day
+		cep1BlocksY1 = 366 * cep1BlocksPerDay // contain a leap day
+		cep1BlocksY2 = 365 * cep1BlocksPerDay
+		cep1BlocksY3 = 365 * cep1BlocksPerDay
+		cep1BlocksY4 = 365 * cep1BlocksPerDay
+		cep1BlocksY5 = 366 * cep1BlocksPerDay
+
+		// supply yearly
+		cep1BlockRewardSupplyY1 = new(big.Int).Mul(big.NewInt(40002336), big.NewInt(1e+18))
+		cep1BlockRewardSupplyY2 = new(big.Int).Mul(big.NewInt(29990736), big.NewInt(1e+18))
+		cep1BlockRewardSupplyY3 = new(big.Int).Mul(big.NewInt(22485168), big.NewInt(1e+18))
+		cep1BlockRewardSupplyY4 = new(big.Int).Mul(big.NewInt(16997904), big.NewInt(1e+18))
+		cep1BlockRewardSupplyY5 = new(big.Int).Mul(big.NewInt(127438272), big.NewInt(1e+17))
+
+		// block reward
+		cep1BlockRewardY1 = new(big.Int).Div(cep1BlockRewardSupplyY1, big.NewInt(cep1BlocksY1)) // reward 12.65 cpc per block
+		cep1BlockRewardY2 = new(big.Int).Div(cep1BlockRewardSupplyY2, big.NewInt(cep1BlocksY2)) // reward 9.51 cpc per block
+		cep1BlockRewardY3 = new(big.Int).Div(cep1BlockRewardSupplyY3, big.NewInt(cep1BlocksY3)) // reward 7.13 cpc per block
+		cep1BlockRewardY4 = new(big.Int).Div(cep1BlockRewardSupplyY4, big.NewInt(cep1BlocksY4)) // reward 5.39 cpc per block
+		cep1BlockRewardY5 = new(big.Int).Div(cep1BlockRewardSupplyY5, big.NewInt(cep1BlocksY5)) // reward 4.03 cpc per block
+	)
+	t.Log(cep1BlockRewardY2)
+	t.Log(cep1BlockRewardY3)
+	t.Log(cep1BlockRewardY4)
+	t.Log(cep1BlockRewardY5)
+
+	// main test
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 7, common.Hash{}, proposers, nil, FakeMode)
+	d.chain = newBlockchain(888)
+	d.dh = dph
+
+	// 1 year
+	y1 := d.GetBlockReward(uint64(cep1BlocksY1))
+	if y1.Cmp(cep1BlockRewardY1) != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y1, cep1BlockRewardY1)
+	}
+
+	// 2 year
+	t.Logf("Reduced at: %d", cep1BlocksY1+cep1BlocksY2)
+	y2 := d.GetBlockReward(uint64(cep1BlocksY1 + cep1BlocksY2))
+	if y2.Cmp(cep1BlockRewardY2) != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y2, cep1BlockRewardY2)
+	}
+
+	// 3 year
+	y3 := d.GetBlockReward(uint64(cep1BlocksY1 + cep1BlocksY2 + cep1BlocksY3))
+	if y3.Cmp(cep1BlockRewardY3) != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y3, cep1BlockRewardY3)
+	}
+
+	// 4 year
+	y4 := d.GetBlockReward(uint64(cep1BlocksY1 + cep1BlocksY2 + cep1BlocksY3 + cep1BlocksY4))
+	if y4.Cmp(cep1BlockRewardY4) != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y4, cep1BlockRewardY4)
+	}
+
+	// 5 year
+	y5 := d.GetBlockReward(uint64(cep1BlocksY1 + cep1BlocksY2 + cep1BlocksY3 + cep1BlocksY4 + cep1BlocksY5))
+	if y5.Cmp(cep1BlockRewardY5) != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y5, cep1BlockRewardY5)
+	}
+
+	// 6 year
+	y6 := d.GetBlockReward(uint64(cep1BlocksY1 + cep1BlocksY2 + cep1BlocksY3 + cep1BlocksY4 + cep1BlocksY5 + 1))
+	if y6.Int64() != 0 {
+		t.Errorf("got reward is not equal with expect, %v != %v", y6, 0)
+	}
+}
+
 func TestDpor_Seal(t *testing.T) {
 	dph := &defaultDporHelper{&defaultDporUtil{}}
 	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}

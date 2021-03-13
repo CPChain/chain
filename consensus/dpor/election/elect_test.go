@@ -87,6 +87,14 @@ func Test_findHit(t *testing.T) {
 			},
 			want: 2,
 		},
+		{
+			name: "6",
+			args: args{
+				hit:     20,
+				hitSums: []int64{2, 4, 8, 9, 15},
+			},
+			want: 4,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
