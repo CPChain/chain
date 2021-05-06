@@ -31,6 +31,14 @@ func TestSetRunModeToTestnet(t *testing.T) {
 	SetRunMode(Dev)
 }
 
+func TestSetRunModeToMini(t *testing.T) {
+	SetRunMode(Mini)
+	runMode := GetRunMode()
+	assert.Equal(t, Mini, runMode)
+	assert.Equal(t, true, IsMini())
+	SetRunMode(Dev)
+}
+
 func TestSetRunModeToUnknown(t *testing.T) {
 	err := SetRunMode("Unknown")
 	if err == nil {

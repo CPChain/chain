@@ -77,6 +77,8 @@ func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecds
 		runMode = configs.TestMainnet
 	case configs.TestnetChainId:
 		runMode = configs.Testnet
+	case configs.MiniChainId:
+		runMode = configs.Mini
 	default:
 		log.Fatal("unknown chain id")
 	}

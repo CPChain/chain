@@ -8,17 +8,20 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 )
 
+// RunMode specify the mode of node
 type RunMode string
 
 const (
+	// Dev node running is dev env
 	Dev         RunMode = "dev"
 	Testnet     RunMode = "testnet"
 	Mainnet     RunMode = "mainnet"
 	TestMainnet RunMode = "testmainnet"
 	Testcase    RunMode = "testcase"
+	Mini        RunMode = "mini"
 )
 
-// Run mode for switch node configuration, eg:dev|testnet|mainnet
+// Run mode for switch node configuration, eg:dev|testnet|mainnet|mini
 var runModeValue = Mainnet
 
 func GetRunMode() RunMode {
@@ -32,6 +35,7 @@ func SetRunMode(runMode RunMode) error {
 	case TestMainnet:
 	case Testnet:
 	case Testcase:
+	case Mini:
 	default:
 		log.Error(fmt.Sprintf("unknown runModeValue, revert to default mode: %s", runModeValue), "runModeValue", runMode)
 		return fmt.Errorf("unknown runModeValue %s", runMode)
@@ -59,6 +63,11 @@ func IsTestnet() bool {
 
 func IsTestcase() bool {
 	return Testcase == runModeValue
+}
+
+// IsMini check if the mode is mini
+func IsMini() bool {
+	return Mini == runModeValue
 }
 
 func (RunMode) String() string {

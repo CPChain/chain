@@ -11,7 +11,11 @@
 .PHONY: docs docs-serve docs-serve-clean docs-clean
 .PHONY: docs-mv-solidity docs-cp-solidity docs-solidity
 
+export GO111MODULE=off
+
 SHELL := $(shell which bash)
+
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
@@ -248,3 +252,10 @@ docs-cp-solidity:
 	cp -rf docs/solidity/docs/_build/* docs/_build/solidity/
 
 docs-solidity: docs-mv-solidity docs-cp-solidity
+
+docker-build-abigen:
+	# @docker run -i --rm -v $(ROOT_DIR):/go/src/bitbucket.org/cpchain/chain \
+    #             golang:1.11.1 /bin/bash -c "cd /go/src/bitbucket.org/cpchain/chain && make abigen"
+	@cp docker/abigen/Dockerfile .
+	@docker build -t cpchain2018/abigen .
+	@rm Dockerfile
