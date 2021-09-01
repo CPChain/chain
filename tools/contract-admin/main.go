@@ -14,6 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/tools/contract-admin/proposal"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rnode"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rpt"
+	"bitbucket.org/cpchain/chain/tools/contract-admin/tools"
 	"github.com/urfave/cli"
 )
 
@@ -40,6 +41,7 @@ func newApp() *cli.App {
 		network.NetworkCommand,
 		rnode.RnodeCommand,
 		rpt.RptCommand,
+		tools.ToolsCommand,
 	}
 
 	// maintain order

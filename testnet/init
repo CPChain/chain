@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+cpchain_init="docker run -v ${pwd}:/datadir --workdir /datadir --rm -it liaojl/cpchain:0.5.2"
+
+# Generate 6 proposers and 4 validators and 1 contract-admin
+
+function gen-pwd() {
+    openssl rand -base64 15
+}
+
+function cpchain() {
+    path=$1
+    shift
+    docker run -v $path:/datadir --workdir /datadir --rm -i liaojl/cpchain:0.5.2 cpchain $@
+}
+
+function create-key() {
+    data=$1
+    name=$2
+    current=$data/$name
+    mkdir -p $current/keystore
+    pwd=`gen-pwd`
+    datadir='/tmp/datadir'
+    rm -rf $datadir
+    mkdir -p $datadir
+    if [ -f $current/keystore/key ]; then
+        echo "$name exists!"
+        return
+    fi
+    address=$(echo -e "$pwd\n$pwd\n" | cpchain $datadir account new --datadir /datadir| \
+            grep "Address: {" | sed 's/Address: .\([0-9a-zA-Z]*\).*/\1/g' )
+    echo "$name => 0x$address"
+    files=$(ls $datadir/keystore)
+    for filename in $files
+    do
+        mv $datadir/keystore/$filename $current/keystore/key
+    done
+    printf $pwd > $current/password
+    printf 0x$address > $current/address
+}
+
+# generate node key for bootnodes and validators
+function gen-node-key() {
+    path=$1
+
+    mkdir -p $path/cpchain
+
+    if [ -f $path/cpchain/nodekey ]; then
+        return
+    fi
+
+    tmppath="/tmp/bootnode"
+    rm -rf $tmppath
+    mkdir -p $tmppath
+
+    docker run -v $tmppath:/datadir --workdir /datadir -i --rm -it liaojl/bootnode:0.5.2 bootnode -genkey /datadir/node.key
+    enode=`docker run -v $tmppath:/datadir --workdir /datadir -i --rm -it liaojl/bootnode:0.5.2 bootnode -nodekey /datadir/node.key -writeaddress`
+    mv $tmppath/node.key $path/cpchain/nodekey
+    echo "enode://$enode" > $path/enode
+    rm -rf $tmppath
+}
+
+mkdir -p datadir
+
+# Generate keys
+keys=(p1 p2 p3 p4 p5 p6 v1 v2 v3 v4 ca bank)
+for i in "${keys[@]}"
+do
+    create-key datadir $i
+done
+
+# Generate node-key
+nodes=(v1 v2 v3 v4 b1)
+for i in "${nodes[@]}"
+do
+    gen-node-key datadir/$i
+done
+
+# Contract address
+ca=`cat datadir/ca/address`
+
+# Address of contracts
+rnode=`docker run --rm -i liaojl/contract-admin:0.5.3.rc.2 contract-admin tools gen-address --owner $ca --nonce 0`
+admission=`docker run --rm -i liaojl/contract-admin:0.5.3.rc.2 contract-admin tools gen-address --owner $ca --nonce 1`
+campaign=`docker run --rm -i liaojl/contract-admin:0.5.3.rc.2 contract-admin tools gen-address --owner $ca --nonce 2`
+rpt=`docker run --rm -i liaojl/contract-admin:0.5.3.rc.2 contract-admin tools gen-address --owner $ca --nonce 3`
+network=`docker run --rm -i liaojl/contract-admin:0.5.3.rc.2 contract-admin tools gen-address --owner $ca --nonce 4`
+
+echo "RNode: $rnode"
+echo "Admission: $admission"
+echo "Campaign: $campaign"
+echo "RPT: $rpt"
+echo "Network: $network"
+
+# Generate genesis.toml
