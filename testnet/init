@@ -65,7 +65,7 @@ function gen-node-key() {
 mkdir -p datadir
 
 # Generate keys
-keys=(p1 p2 p3 p4 p5 p6 v1 v2 v3 v4 ca bank)
+keys=(p1 p2 p3 p4 v1 v2 v3 v4 ca)
 for i in "${keys[@]}"
 do
     create-key datadir $i
@@ -94,4 +94,21 @@ echo "Campaign: $campaign"
 echo "RPT: $rpt"
 echo "Network: $network"
 
+export rnode=$rnode
+export admission=$admission
+export campaign=$campaign
+export rpt=$rpt
+export network=$network
+
+export p1=`cat datadir/p1/address`
+export p2=`cat datadir/p2/address`
+export p3=`cat datadir/p3/address`
+export p4=`cat datadir/p4/address`
+export v1=`cat datadir/v1/address`
+export v2=`cat datadir/v2/address`
+export v3=`cat datadir/v3/address`
+export v4=`cat datadir/v4/address`
+export ca=`cat datadir/ca/address`
+
 # Generate genesis.toml
+envsubst < genesis.example.tmpl > genesis.toml
