@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+mkdir -p logs
+
+# 启动 bootstraps
+function startBootnodes() {
+    nohup ../build/bin/bootnode -nodekey datadir/b1/cpchain/nodekey -verbosity 9 -addr :30381 -logfile logs/b1.log 2>&1 > logs/b1.nohup.out &
+}
+
+startBootnodes

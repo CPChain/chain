@@ -112,3 +112,11 @@ export ca=`cat datadir/ca/address`
 
 # Generate genesis.toml
 envsubst < genesis.example.tmpl > genesis.toml
+
+# init genesis blocks
+
+keys=(p1 p2 p3 p4 v1 v2 v3 v4 ca)
+for i in "${keys[@]}"
+do
+    ../build/bin/cpchain chain init --runmode dev --datadir datadir/$i genesis.toml
+done
