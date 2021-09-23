@@ -58,7 +58,7 @@ function gen-node-key() {
     docker run -v $tmppath:/datadir --workdir /datadir -i --rm -it liaojl/bootnode:0.5.2 bootnode -genkey /datadir/node.key
     enode=`docker run -v $tmppath:/datadir --workdir /datadir -i --rm -it liaojl/bootnode:0.5.2 bootnode -nodekey /datadir/node.key -writeaddress`
     mv $tmppath/node.key $path/cpchain/nodekey
-    echo "enode://$enode" > $path/enode
+    echo "$enode" > $path/enode
     rm -rf $tmppath
 }
 

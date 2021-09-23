@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+./stop
+./check
+
+rm -rf datadir
+rm -rf logs
+rm -rf genesis.toml
