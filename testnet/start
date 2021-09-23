@@ -10,6 +10,7 @@ export b1_enode=`cat datadir/b1/enode | tr -d '\r'`
 export b1_port=30381
 
 function start-bootnodes() {
+    echo "start b1..."
     nohup ../build/bin/bootnode -nodekey datadir/b1/cpchain/nodekey -verbosity 9 -addr :$b1_port -logfile logs/b1.log 2>&1 > logs/b1.nohup.out &
 }
 
@@ -32,7 +33,7 @@ do
     fi
 done
 
-VERBOSITY=5
+VERBOSITY=4
 GENESIS="genesis.toml"
 
 function start-validators() {
@@ -47,6 +48,20 @@ function start-validators() {
     done
 }
 
-# start-bootnodes
+p_start=30410
+function start-proposers() {
+    for i in `seq 1 4`
+    do
+        echo "start p$i..."
+        p_port=$((p_start+i))
+        addr=`cat datadir/p${i}/address | tr -d '\r'`
+        nohup ../build/bin/cpchain run --genesis $GENESIS --verbosity $VERBOSITY --mine --bootnodes $bootnodes --validators $validators \
+            --port $p_port --datadir datadir/p${i} --unlock $addr --password datadir/p${i}/password 2>&1 > logs/p${i}.log &
+        sleep 1
+    done
+}
+
+start-bootnodes
 start-validators
+start-proposers
 
