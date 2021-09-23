@@ -306,8 +306,9 @@ var NodeFlags = []cli.Flag{
 var MiscFlags = []cli.Flag{}
 
 const (
-	LineNumberFlagName = "linenumber"
-	VerbosityFlagName  = "verbosity"
+	LineNumberFlagName         = "linenumber"
+	VerbosityFlagName          = "verbosity"
+	IgnoreNetworkCheckFlagName = "ignoreNetworkCheck"
 )
 
 var LogFlags = []cli.Flag{

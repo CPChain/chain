@@ -91,6 +91,11 @@ func init() {
 	runFlags = append(runFlags, flags.AccountFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
 	runFlags = append(runFlags, flags.LogFlags...)
+	runFlags = append(runFlags, cli.BoolFlag{
+		Name:   flags.IgnoreNetworkCheckFlagName,
+		Usage:  "Ignore network check",
+		EnvVar: "CPC_IGNORE_NETWORK_CHECK",
+	})
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",
@@ -265,7 +270,14 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 
 	cpchainService.AdmissionApiBackend.SetAdmissionKey(key)
 	if configs.IgnoreNetworkStatusCheck {
-		cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
+		if ctx.IsSet(flags.IgnoreNetworkCheckFlagName) {
+			ignore := ctx.Bool(flags.IgnoreNetworkCheckFlagName)
+			if !ignore {
+				cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
+			}
+		} else {
+			cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
+		}
 	}
 
 	if ctx.Bool(flags.MineFlagName) {

@@ -120,7 +120,6 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 	if isRunningChain {
 		updateBootstrapNodes(ctx, cfg)
 		updateValidatorNodes(ctx)
-		updateGenesisAddress(ctx)
 	}
 	updateNodeKey(ctx, cfg)
 }
@@ -177,6 +176,7 @@ func updateGenesisAddress(ctx *cli.Context) {
 		configs.SetDefaultCandidates(genesis.Candidates)
 		configs.SetDefaultProposers(genesis.Dpor.Proposers)
 		configs.SetDefaultValidators(genesis.Dpor.Validators)
+		configs.SetDefaultChainConfigInfo(genesis.Config)
 	}
 }
 
@@ -381,6 +381,8 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	updateNodeConfig(ctx, &cfg.Node)
 
 	updateSyncModeFlag(ctx, &cfg.Cpc)
+
+	updateGenesisAddress(ctx)
 
 	// create node
 	n, err := node.New(&cfg.Node)

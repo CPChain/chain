@@ -20,6 +20,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,6 +32,11 @@ type AdmissionApiBackend struct {
 
 func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
 	campaignContractAddr common.Address, rNodeContractAddr common.Address, networkContractAddr common.Address) ApiBackend {
+	log.Debug("new admission api backend", "address", address.Hex(),
+		"admission", admissionContractAddr.Hex(),
+		"campaign", campaignContractAddr.Hex(),
+		"rnode", rNodeContractAddr.Hex(),
+		"network", networkContractAddr.Hex())
 	return &AdmissionApiBackend{
 		admissionControl: NewAdmissionControl(chain, address, admissionContractAddr, campaignContractAddr, rNodeContractAddr, networkContractAddr),
 	}

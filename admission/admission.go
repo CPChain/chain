@@ -128,7 +128,7 @@ func (ac *AdmissionControl) CheckNetworkStatus() bool {
 
 	chck, err := networkCheckerInstance.Open(nil)
 	if err != nil {
-		log.Error("failed to get dial open flag from network checker instance", "err", err)
+		log.Error("failed to get dial open flag from network checker instance", "err", err, "networkContractAddr", ac.networkContractAddr.Hex())
 		return false
 	}
 	check = chck
