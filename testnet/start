@@ -55,7 +55,8 @@ function start-proposers() {
         echo "start p$i..."
         p_port=$((p_start+i))
         addr=`cat datadir/p${i}/address | tr -d '\r'`
-        nohup ../build/bin/cpchain run --genesis $GENESIS --verbosity $VERBOSITY --mine --bootnodes $bootnodes --validators $validators \
+        nohup ../build/bin/cpchain run --genesis $GENESIS --verbosity $VERBOSITY --mine \
+            --bootnodes $bootnodes --validators $validators --ignoreNetworkCheck \
             --port $p_port --datadir datadir/p${i} --unlock $addr --password datadir/p${i}/password 2>&1 > logs/p${i}.log &
         sleep 1
     done
@@ -77,7 +78,20 @@ function start-civilians() {
     done
 }
 
+ca_port=30610
+ca_rpc=8499
+function start-ca() {
+    echo "start ca..."
+    addr=`cat datadir/ca/address | tr -d '\r'`
+    nohup ../build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin \
+            --genesis $GENESIS --verbosity $VERBOSITY --bootnodes $bootnodes --validators $validators \
+            --port $ca_port --datadir datadir/ca --rpcaddr 0.0.0.0:${ca_rpc} \
+            --unlock $addr --password datadir/ca/password \
+            2>&1 > logs/ca.log &
+}
+
 start-bootnodes
 start-validators
 start-proposers
 start-civilians
+start-ca
