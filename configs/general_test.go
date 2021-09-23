@@ -81,6 +81,33 @@ func TestInitDefaultValidators(t *testing.T) {
 	assert.Equal(t, defaultDevValidatorNodes, url)
 }
 
+func TestSetDefaultAddresses(t *testing.T) {
+	addrs := []common.Address{
+		common.HexToAddress("0x01"),
+	}
+
+	// candidates
+	SetDefaultCandidates(addrs)
+	got := Candidates()
+	if len(got) != len(addrs) || got[0].Hex() != addrs[0].Hex() {
+		t.Errorf("Candidates set failed")
+	}
+
+	// validators
+	SetDefaultValidators(addrs)
+	got = Validators()
+	if len(got) != len(addrs) || got[0].Hex() != addrs[0].Hex() {
+		t.Errorf("Validators set failed")
+	}
+
+	// proposers
+	SetDefaultProposers(addrs)
+	got = Validators()
+	if len(got) != len(addrs) || got[0].Hex() != addrs[0].Hex() {
+		t.Errorf("Proposers set failed")
+	}
+}
+
 func TestDporConfig_String(t *testing.T) {
 	contracts := map[string]common.Address{}
 	contracts["t1"] = common.HexToAddress("0x01")

@@ -210,16 +210,55 @@ func ChainConfigInfo() *ChainConfig {
 	return chainConfig
 }
 
+var (
+	defaultCandidates []common.Address
+	defaultPropsers   []common.Address
+	defaultValidators []common.Address
+)
+
 func Candidates() []common.Address {
-	return candidatesMap[GetRunMode()]
+	if defaultCandidates == nil || len(defaultCandidates) == 0 {
+		return candidatesMap[GetRunMode()]
+	}
+	return defaultCandidates
+}
+
+// SetDefaultCandidates allow dynically update this
+func SetDefaultCandidates(candidates []common.Address) {
+	defaultCandidates = candidatesMap[GetRunMode()]
+	if candidates != nil {
+		defaultCandidates = candidates
+	}
 }
 
 func Proposers() []common.Address {
-	return proposersMap[GetRunMode()]
+	if defaultPropsers == nil || len(defaultPropsers) == 0 {
+		return proposersMap[GetRunMode()]
+	}
+	return defaultPropsers
+}
+
+func SetDefaultProposers(proposers []common.Address) {
+	defaultPropsers = proposersMap[GetRunMode()]
+	if proposers != nil {
+		defaultPropsers = proposers
+	}
 }
 
 func Validators() []common.Address {
-	return validatorsMap[GetRunMode()]
+	if defaultValidators == nil || len(defaultValidators) == 0 {
+		return validatorsMap[GetRunMode()]
+	}
+	return defaultValidators
+}
+
+// SetDefaultValidators 通过此函数，则可仅需通过 genesis.toml 即可配置一条新链
+// 而不需自定义一个模式
+func SetDefaultValidators(validators []common.Address) {
+	defaultValidators = validatorsMap[GetRunMode()]
+	if validators != nil {
+		defaultValidators = validators
+	}
 }
 
 func Bootnodes() []string {
@@ -233,6 +272,7 @@ func GetDefaultValidators() []string {
 	return defaultValidatorNodes
 }
 
+// InitDefaultValidators init validator's nodes
 func InitDefaultValidators(validators []string) {
 	defaultValidatorNodes = defaultValidatorNodesMap[GetRunMode()]
 
