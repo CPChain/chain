@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+mkdir -p logs
+
+# 启动 bootstraps
+export b1_ip="127.0.0.1"
+export b1_enode=`cat datadir/b1/enode | tr -d '\r'`
+export b1_port=30381
+
+function start-bootnodes() {
+    nohup ../build/bin/bootnode -nodekey datadir/b1/cpchain/nodekey -verbosity 9 -addr :$b1_port -logfile logs/b1.log 2>&1 > logs/b1.nohup.out &
+}
+
+# bootnodes
+bootnodes="enode://${b1_enode}@${b1_ip}:${b1_port}"
+
+# 启动 Validators
+validators=""
+v_ip="127.0.0.1"
+v_start=30310
+for i in `seq 1 4`
+do 
+    enode=`cat datadir/v${i}/enode | tr -d '\r'`
+    v_port=$((v_start+i))
+    v="enode://${enode}@${v_ip}:${v_port}"
+    if [ $i == 1 ]; then
+        validators=${v}
+    else
+        validators="${validators},${v}"
+    fi
+done
+
+VERBOSITY=5
+
+function start-validators() {
+    for i in `seq 1 4`
+    do
+        v_port=$((v_start+i))
+        addr=`cat datadir/v${i}/address | tr -d '\r'`
+        nohup ../build/bin/cpchain run --verbosity $VERBOSITY --validator --bootnodes $bootnodes --validators $validators \
+            --port $v_port --datadir datadir/v${i} --unlock $addr --password datadir/v${i}/password 2>&1 > logs/v${i}.log &
+        sleep 1
+    done
+}
+
+# start-bootnodes
+start-validators
+

@@ -138,6 +138,7 @@ func (e *GenesisMismatchError) Error() string {
 //
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
+	log.Info("Setup genesis block")
 	if genesis != nil && genesis.Config == nil {
 		return configs.ChainConfigInfo(), common.Hash{}, errGenesisNoConfig
 	}
@@ -145,6 +146,7 @@ func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainCo
 	stored := rawdb.ReadCanonicalHash(db, 0)
 	if (stored == common.Hash{}) {
 		// Just commit the new block if there is no stored genesis block.
+		log.Info("No stored genesis block")
 		if genesis == nil {
 			log.Info("Writing default main-net genesis block")
 			genesis = DefaultGenesisBlock()
@@ -155,6 +157,7 @@ func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainCo
 		return genesis.Config, block.Hash(), err
 	} else {
 		// Get the existing chain configuration.
+		log.Info("Get the existing genesis block")
 		storedCfg := rawdb.ReadChainConfig(db, stored)
 		newCfg := genesis.configOrDefault(stored)
 		var finalCfg *configs.ChainConfig
