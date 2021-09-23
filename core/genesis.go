@@ -44,10 +44,11 @@ type Genesis struct {
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64         `json:"number"     toml:"number"`
-	GasUsed    uint64         `json:"gasUsed"    toml:"gasUsed"`
-	ParentHash common.Hash    `json:"parentHash" toml:"parentHash"`
-	Dpor       types.DporSnap `json:"dpor"       toml:"dpor"`
+	Number     uint64           `json:"number"     toml:"number"`
+	GasUsed    uint64           `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash      `json:"parentHash" toml:"parentHash"`
+	Candidates []common.Address `json:"candidates" toml:"candidates"`
+	Dpor       types.DporSnap   `json:"dpor"       toml:"dpor"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.

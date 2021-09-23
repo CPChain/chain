@@ -29,6 +29,7 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
 		GasUsed    math.HexOrDecimal64                         `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash common.Hash                                 `json:"parentHash" toml:"parentHash"`
+		Candidates []common.Address                            `json:"candidates" toml:"candidates"`
 		Dpor       types.DporSnap                              `json:"dpor"       toml:"dpor"`
 	}
 	var enc Genesis
@@ -64,6 +65,7 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
 		GasUsed    *math.HexOrDecimal64                        `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash *common.Hash                                `json:"parentHash" toml:"parentHash"`
+		Candidates []common.Address                            `json:"candidates" toml:"candidates"`
 		Dpor       *types.DporSnap                             `json:"dpor"       toml:"dpor"`
 	}
 	var dec Genesis
@@ -125,6 +127,7 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
 		GasUsed    math.HexOrDecimal64                         `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash common.Hash                                 `json:"parentHash" toml:"parentHash"`
+		Candidates []common.Address                            `json:"candidates" toml:"candidates"`
 		Dpor       types.DporSnap                              `json:"dpor"       toml:"dpor"`
 	}
 	var enc Genesis
@@ -160,6 +163,7 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
 		GasUsed    *math.HexOrDecimal64                        `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash *common.Hash                                `json:"parentHash" toml:"parentHash"`
+		Candidates []common.Address                            `json:"candidates" toml:"candidates"`
 		Dpor       *types.DporSnap                             `json:"dpor"       toml:"dpor"`
 	}
 	var dec Genesis

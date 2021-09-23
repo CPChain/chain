@@ -74,6 +74,7 @@ const (
 	DataDirFlagName = "datadir"
 	LogFileFlagName = "logfile"
 	RunModeFlagName = "runmode"
+	GenesisFlagName = "genesis"
 )
 
 var GeneralFlags = []cli.Flag{
@@ -262,6 +263,10 @@ var P2pFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  NodeKeyFileFlagName,
 		Usage: "P2P node key file",
+	},
+	cli.StringFlag{
+		Name:  GenesisFlagName,
+		Usage: "If your use your own genesis.toml, you should specify the path of it",
 	},
 }
 

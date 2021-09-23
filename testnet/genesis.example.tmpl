@@ -6,6 +6,7 @@ coinbase = "0x0000000000000000000000000000000000000000"
 number = 0
 gasUsed = 0
 parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+candidates = ["${p1}", "${p2}", "${p3}", "${p4}"]
 
 [config]
 chainId = 41
@@ -17,7 +18,7 @@ viewLen = 3
 faultyNumber = 1
 maxInitBlockNumber = 240
 proxyContractRegister = "${rnode}"
-impeachTimeout = 2000000000
+impeachTimeout = 20000000000
 
 [config.dpor.contracts]
 campaign = "${campaign}"
