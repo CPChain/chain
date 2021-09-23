@@ -115,8 +115,9 @@ envsubst < genesis.example.tmpl > genesis.toml
 
 # init genesis blocks
 
-keys=(p1 p2 p3 p4 v1 v2 v3 v4 ca)
+keys=(p1 p2 p3 p4 v1 v2 v3 v4 cv1 ca)
 for i in "${keys[@]}"
 do
+    echo "init $i ..."
     ../build/bin/cpchain chain init --runmode dev --datadir datadir/$i genesis.toml
 done

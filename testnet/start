@@ -61,7 +61,23 @@ function start-proposers() {
     done
 }
 
+cv_start=30510
+cv_rpc_start=8500
+function start-civilians() {
+    for i in `seq 1 1`
+    do
+        echo "start cv$i..."
+        cv_port=$((cv_start+i))
+        cv_rpc_port=$((cv_rpc_start+i))
+        nohup ../build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin \
+            --genesis $GENESIS --verbosity $VERBOSITY --bootnodes $bootnodes --validators $validators \
+            --port $cv_port --datadir datadir/cv${i} --rpcaddr 0.0.0.0:${cv_rpc_port} \
+            2>&1 > logs/cv${i}.log &
+        sleep 1
+    done
+}
+
 start-bootnodes
 start-validators
 start-proposers
-
+start-civilians
