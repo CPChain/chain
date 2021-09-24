@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+../build/bin/smartcontract http://127.0.0.1:8499 datadir/ca/keystore/ `cat datadir/ca/password`

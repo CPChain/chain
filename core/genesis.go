@@ -44,10 +44,11 @@ type Genesis struct {
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64         `json:"number"     toml:"number"`
-	GasUsed    uint64         `json:"gasUsed"    toml:"gasUsed"`
-	ParentHash common.Hash    `json:"parentHash" toml:"parentHash"`
-	Dpor       types.DporSnap `json:"dpor"       toml:"dpor"`
+	Number     uint64           `json:"number"     toml:"number"`
+	GasUsed    uint64           `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash      `json:"parentHash" toml:"parentHash"`
+	Candidates []common.Address `json:"candidates" toml:"candidates"`
+	Dpor       types.DporSnap   `json:"dpor"       toml:"dpor"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
@@ -169,10 +170,12 @@ func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainCo
 			}
 			finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)
 		} else {
+			log.Debug("Genesis is nil, so use default genesis", "chainID", newCfg.ChainID, "stored != MainnetGenesisHash", stored != MainnetGenesisHash)
 			// Special case: don't change the existing config of a non-mainnet chain if no new
 			// config is supplied. These chains would get AllProtocolChanges (and a compat error)
 			// if we just continued here.
 			if stored != MainnetGenesisHash {
+				log.Debug("use stored genesis", "rnode", storedCfg.Dpor.Contracts["rnode"].Hex(), "network", storedCfg.Dpor.Contracts["network"].Hex())
 				return storedCfg, stored, nil
 			} else {
 				finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)

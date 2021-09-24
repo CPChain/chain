@@ -6,18 +6,21 @@ coinbase = "0x0000000000000000000000000000000000000000"
 number = 0
 gasUsed = 0
 parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+candidates = ["${p1}", "${p2}", "${p3}", "${p4}"]
 
 [config]
 chainId = 41
 
 [config.dpor]
-period = 200
+# period = 10000
+period = 500 # for test
 termLen = 4
 viewLen = 3
 faultyNumber = 1
-maxInitBlockNumber = 240
+maxInitBlockNumber = 180
 proxyContractRegister = "${rnode}"
-impeachTimeout = 2000000000
+# impeachTimeout = 20000000000
+impeachTimeout = 5000000000 # for test
 
 [config.dpor.contracts]
 campaign = "${campaign}"
@@ -50,8 +53,17 @@ balance = "0x7fffffffffffffffffff"
 [alloc.${p4}]
 balance = "0x7fffffffffffffffffff"
 
+[alloc.${p5}]
+balance = "0x7fffffffffffffffffff"
+
+[alloc.${p6}]
+balance = "0x7fffffffffffffffffff"
+
 [alloc.${ca}]
 balance = "0x7fffffffffffffffffff"
+
+[alloc.${bank}]
+balance = "0x33b2e3c9fd0803ce8000000"
 
 [dpor]
 seal = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"

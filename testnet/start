@@ -10,6 +10,7 @@ export b1_enode=`cat datadir/b1/enode | tr -d '\r'`
 export b1_port=30381
 
 function start-bootnodes() {
+    echo "start b1..."
     nohup ../build/bin/bootnode -nodekey datadir/b1/cpchain/nodekey -verbosity 9 -addr :$b1_port -logfile logs/b1.log 2>&1 > logs/b1.nohup.out &
 }
 
@@ -32,19 +33,82 @@ do
     fi
 done
 
-VERBOSITY=5
+VERBOSITY=4
+GENESIS="genesis.toml"
 
 function start-validators() {
     for i in `seq 1 4`
     do
+        echo "start v$i..."
         v_port=$((v_start+i))
         addr=`cat datadir/v${i}/address | tr -d '\r'`
-        nohup ../build/bin/cpchain run --verbosity $VERBOSITY --validator --bootnodes $bootnodes --validators $validators \
-            --port $v_port --datadir datadir/v${i} --unlock $addr --password datadir/v${i}/password 2>&1 > logs/v${i}.log &
+        nohup ../build/bin/cpchain run --runmode dev --genesis $GENESIS --verbosity $VERBOSITY --validator --bootnodes $bootnodes --validators $validators \
+            --port $v_port --datadir datadir/v${i} --ignoreNetworkCheck --unlock $addr --password datadir/v${i}/password 2>&1 > logs/v${i}.log &
         sleep 1
     done
 }
 
-# start-bootnodes
-start-validators
+p_start=30410
+function start-proposers() {
+    for i in `seq 1 4`
+    do
+        echo "start p$i..."
+        p_port=$((p_start+i))
+        addr=`cat datadir/p${i}/address | tr -d '\r'`
+        nohup ../build/bin/cpchain run --runmode dev --genesis $GENESIS --verbosity $VERBOSITY --mine \
+            --bootnodes $bootnodes --validators $validators --ignoreNetworkCheck \
+            --port $p_port --datadir datadir/p${i} --unlock $addr --password datadir/p${i}/password 2>&1 > logs/p${i}.log &
+        sleep 1
+    done
+}
 
+function start-extra-proposers() {
+    for i in `seq 5 6`
+    do
+        echo "start p$i..."
+        p_port=$((p_start+i))
+        addr=`cat datadir/p${i}/address | tr -d '\r'`
+        nohup ../build/bin/cpchain run --runmode dev --genesis $GENESIS --verbosity $VERBOSITY --mine \
+            --bootnodes $bootnodes --validators $validators --ignoreNetworkCheck \
+            --port $p_port --datadir datadir/p${i} --unlock $addr --password datadir/p${i}/password 2>&1 > logs/p${i}.log &
+        sleep 1
+    done
+}
+
+cv_start=30510
+cv_rpc_start=8500
+function start-civilians() {
+    for i in `seq 1 1`
+    do
+        echo "start cv$i..."
+        cv_port=$((cv_start+i))
+        cv_rpc_port=$((cv_rpc_start+i))
+        nohup ../build/bin/cpchain run --runmode dev --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin \
+            --genesis $GENESIS --verbosity $VERBOSITY --ignoreNetworkCheck --bootnodes $bootnodes --validators $validators \
+            --port $cv_port --datadir datadir/cv${i} --rpcaddr 0.0.0.0:${cv_rpc_port} \
+            2>&1 > logs/cv${i}.log &
+        sleep 1
+    done
+}
+
+ca_port=30610
+ca_rpc=8499
+function start-ca() {
+    echo "start ca..."
+    addr=`cat datadir/ca/address | tr -d '\r'`
+    nohup ../build/bin/cpchain run --runmode dev --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin \
+            --genesis $GENESIS --ignoreNetworkCheck --verbosity $VERBOSITY --bootnodes $bootnodes --validators $validators \
+            --port $ca_port --datadir datadir/ca --rpcaddr 0.0.0.0:${ca_rpc} \
+            --unlock $addr --password datadir/ca/password \
+            2>&1 > logs/ca.log &
+}
+
+start-bootnodes
+start-validators
+start-proposers
+start-civilians
+start-ca
+# start-extra-proposers
+
+# 228 254 288 324 360
+# 26 34 36 36 

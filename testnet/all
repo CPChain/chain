@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+./init
+
+./start
+
+sleep 5
+
+./deploy-contracts
+
+tail -f logs/p1.log

@@ -199,9 +199,19 @@ var (
 	TestChainConfig = &ChainConfig{big.NewInt(DevChainId), &DporConfig{Period: 0, TermLen: 4}}
 )
 
+var (
+	defaultCandidates  []common.Address
+	defaultPropsers    []common.Address
+	defaultValidators  []common.Address
+	defaultChainConfig *ChainConfig
+)
+
 // this contains all the changes we have made to the cpchain protocol.
 // serves as the *default* config.
 func ChainConfigInfo() *ChainConfig {
+	if defaultChainConfig != nil {
+		return defaultChainConfig
+	}
 	runModeValue := GetRunMode()
 	chainConfig, ok := chainConfigMap[runModeValue]
 	if !ok {
@@ -210,11 +220,9 @@ func ChainConfigInfo() *ChainConfig {
 	return chainConfig
 }
 
-var (
-	defaultCandidates []common.Address
-	defaultPropsers   []common.Address
-	defaultValidators []common.Address
-)
+func SetDefaultChainConfigInfo(c *ChainConfig) {
+	defaultChainConfig = c
+}
 
 func Candidates() []common.Address {
 	if defaultCandidates == nil || len(defaultCandidates) == 0 {

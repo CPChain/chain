@@ -65,7 +65,7 @@ function gen-node-key() {
 mkdir -p datadir
 
 # Generate keys
-keys=(p1 p2 p3 p4 v1 v2 v3 v4 ca)
+keys=(p1 p2 p3 p4 p5 p6 v1 v2 v3 v4 ca bank)
 for i in "${keys[@]}"
 do
     create-key datadir $i
@@ -104,19 +104,23 @@ export p1=`cat datadir/p1/address`
 export p2=`cat datadir/p2/address`
 export p3=`cat datadir/p3/address`
 export p4=`cat datadir/p4/address`
+export p5=`cat datadir/p5/address`
+export p6=`cat datadir/p6/address`
 export v1=`cat datadir/v1/address`
 export v2=`cat datadir/v2/address`
 export v3=`cat datadir/v3/address`
 export v4=`cat datadir/v4/address`
 export ca=`cat datadir/ca/address`
+export bank=`cat datadir/bank/address`
 
 # Generate genesis.toml
 envsubst < genesis.example.tmpl > genesis.toml
 
 # init genesis blocks
 
-keys=(p1 p2 p3 p4 v1 v2 v3 v4 ca)
+keys=(p1 p2 p3 p4 p5 p6 v1 v2 v3 v4 cv1 ca)
 for i in "${keys[@]}"
 do
+    echo "init $i ..."
     ../build/bin/cpchain chain init --runmode dev --datadir datadir/$i genesis.toml
 done

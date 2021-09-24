@@ -159,3 +159,8 @@ func TestGenesisAlloc(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestNumToHex(t *testing.T) {
+	amount := new(big.Int).Mul(big.NewInt(1000000000), big.NewInt(configs.Cpc))
+	t.Logf("%x", amount)
+}

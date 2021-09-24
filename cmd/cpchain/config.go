@@ -159,6 +159,27 @@ func updateValidatorNodes(ctx *cli.Context) {
 	configs.InitDefaultValidators(urls)
 }
 
+// updateGenesisAddress set the default candidates/validators/proposers
+func updateGenesisAddress(ctx *cli.Context) {
+	if ctx.IsSet(flags.GenesisFlagName) {
+		genesisPath := ctx.String(flags.GenesisFlagName)
+		file, err := os.Open(genesisPath)
+		if err != nil {
+			log.Fatalf("Failed to read genesis file: %v", err)
+		}
+		defer file.Close()
+
+		genesis := new(core.Genesis)
+		if err := toml.NewDecoder(file).Decode(genesis); err != nil {
+			log.Fatalf("invalid genesis file: %v", err)
+		}
+		configs.SetDefaultCandidates(genesis.Candidates)
+		configs.SetDefaultProposers(genesis.Dpor.Proposers)
+		configs.SetDefaultValidators(genesis.Dpor.Validators)
+		configs.SetDefaultChainConfigInfo(genesis.Config)
+	}
+}
+
 // Update node key from a specified file
 func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	var (
@@ -360,6 +381,8 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	updateNodeConfig(ctx, &cfg.Node)
 
 	updateSyncModeFlag(ctx, &cfg.Cpc)
+
+	updateGenesisAddress(ctx)
 
 	// create node
 	n, err := node.New(&cfg.Node)
