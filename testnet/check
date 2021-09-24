@@ -2,8 +2,6 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-ps -ax | grep bootnode
-
 ps -ax | grep cpchain
 
 ps -ax | grep -c bin/cpchain

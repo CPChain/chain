@@ -13,13 +13,14 @@ chainId = 41
 
 [config.dpor]
 # period = 10000
-period = 200 # for test
+period = 500 # for test
 termLen = 4
 viewLen = 3
 faultyNumber = 1
-maxInitBlockNumber = 240
+maxInitBlockNumber = 180
 proxyContractRegister = "${rnode}"
-impeachTimeout = 20000000000
+# impeachTimeout = 20000000000
+impeachTimeout = 5000000000 # for test
 
 [config.dpor.contracts]
 campaign = "${campaign}"
@@ -50,6 +51,12 @@ balance = "0x7fffffffffffffffffff"
 balance = "0x7fffffffffffffffffff"
 
 [alloc.${p4}]
+balance = "0x7fffffffffffffffffff"
+
+[alloc.${p5}]
+balance = "0x7fffffffffffffffffff"
+
+[alloc.${p6}]
 balance = "0x7fffffffffffffffffff"
 
 [alloc.${ca}]
