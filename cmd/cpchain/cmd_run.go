@@ -116,10 +116,16 @@ func init() {
 
 func run(ctx *cli.Context) error {
 	isRunningChain = true
-	err := times.InvalidSystemClock()
-	if err != nil {
-		log.Warn(InvalidSystemClockWarn)
-		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
+	ignored := false
+	if ctx.IsSet(flags.IgnoreNetworkCheckFlagName) {
+		ignored = ctx.Bool(flags.IgnoreNetworkCheckFlagName)
+	}
+	if !ignored {
+		err := times.InvalidSystemClock()
+		if err != nil {
+			log.Warn(InvalidSystemClockWarn)
+			log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
+		}
 	}
 
 	if ctx.IsSet(flags.MineFlagName) && ctx.IsSet(flags.ValidatorFlagName) {
@@ -270,13 +276,13 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 
 	cpchainService.AdmissionApiBackend.SetAdmissionKey(key)
 	if configs.IgnoreNetworkStatusCheck {
+		cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
+	} else {
 		if ctx.IsSet(flags.IgnoreNetworkCheckFlagName) {
 			ignore := ctx.Bool(flags.IgnoreNetworkCheckFlagName)
-			if !ignore {
+			if ignore {
 				cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
 			}
-		} else {
-			cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
 		}
 	}
 
