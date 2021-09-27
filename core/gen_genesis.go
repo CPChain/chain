@@ -111,6 +111,9 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if dec.Dpor != nil {
 		g.Dpor = *dec.Dpor
 	}
+	if dec.Candidates != nil {
+		g.Candidates = dec.Candidates
+	}
 	return nil
 }
 
@@ -208,6 +211,9 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.Dpor != nil {
 		g.Dpor = *dec.Dpor
+	}
+	if dec.Candidates != nil {
+		g.Candidates = dec.Candidates
 	}
 	return nil
 }

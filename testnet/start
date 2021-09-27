@@ -36,14 +36,19 @@ done
 VERBOSITY=4
 GENESIS="genesis.toml"
 
+function start-validator() {
+    i=$1
+    echo "start v$i..."
+    v_port=$((v_start+i))
+    addr=`cat datadir/v${i}/address | tr -d '\r'`
+    nohup ../build/bin/cpchain run --runmode dev --genesis $GENESIS --verbosity $VERBOSITY --validator --bootnodes $bootnodes --validators $validators \
+        --port $v_port --datadir datadir/v${i} --ignoreNetworkCheck --unlock $addr --password datadir/v${i}/password 2>&1 > logs/v${i}.log &
+}
+
 function start-validators() {
     for i in `seq 1 4`
     do
-        echo "start v$i..."
-        v_port=$((v_start+i))
-        addr=`cat datadir/v${i}/address | tr -d '\r'`
-        nohup ../build/bin/cpchain run --runmode dev --genesis $GENESIS --verbosity $VERBOSITY --validator --bootnodes $bootnodes --validators $validators \
-            --port $v_port --datadir datadir/v${i} --ignoreNetworkCheck --unlock $addr --password datadir/v${i}/password 2>&1 > logs/v${i}.log &
+        start-validator $i
         sleep 1
     done
 }
@@ -132,6 +137,9 @@ if [ $target ]; then
         start-proposers
         start-civilians
         start-ca
+        ;;
+    v)
+        start-validator $2
         ;;
     *)
         echo $target
