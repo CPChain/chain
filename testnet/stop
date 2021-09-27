@@ -2,5 +2,18 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-pkill -f bootnode
-pkill -f cpchain
+target=$1
+
+if [ $target ]; then
+    case $target in
+    bootnodes)
+        pkill -f "datadir/b1"
+        ;;
+    all)
+        pkill -f cpchain
+        pkill -f "cpchain run"
+        ;;
+    *)
+        pkill -f "datadir/$target"
+    esac
+fi

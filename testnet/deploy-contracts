@@ -3,3 +3,10 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 ../build/bin/smartcontract http://127.0.0.1:8499 datadir/ca/keystore/ `cat datadir/ca/password`
+
+export ADMISSION_ADDR=0xAFDC4712590c7551dd511dED4435b06997862DD3
+
+# 降级挖矿难度
+# Default, cpu:12, mem:6
+echo -e `cat datadir/ca/password`"\n" | ../build/bin/contract-admin admission setcpu --keystore datadir/ca/keystore/key --endpoint http://127.0.0.1:8499 --contractaddr $ADMISSION_ADDR 2
+echo -e `cat datadir/ca/password`"\n" | ../build/bin/contract-admin admission setmem --keystore datadir/ca/keystore/key --endpoint http://127.0.0.1:8499 --contractaddr $ADMISSION_ADDR 1

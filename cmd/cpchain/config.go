@@ -173,6 +173,9 @@ func updateGenesisAddress(ctx *cli.Context) {
 		if err := toml.NewDecoder(file).Decode(genesis); err != nil {
 			log.Fatalf("invalid genesis file: %v", err)
 		}
+		if genesis.Candidates == nil {
+			log.Fatal("Candidates is nil")
+		}
 		configs.SetDefaultCandidates(genesis.Candidates)
 		configs.SetDefaultProposers(genesis.Dpor.Proposers)
 		configs.SetDefaultValidators(genesis.Dpor.Validators)

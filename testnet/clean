@@ -2,9 +2,9 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-./stop
+./stop all
 ./check
 
-rm -rf datadir
+rm -rf datadir/**/cpchain
 rm -rf logs
 rm -rf genesis.toml

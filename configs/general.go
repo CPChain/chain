@@ -69,7 +69,7 @@ const (
 	// MiniBlockPeriod 300 Millisecond, 3 second
 	MiniBlockPeriod = 3e3
 	// DefaultBlockPeriod 10000 Millisecond, 10 Second
-	DefaultBlockPeriod = 1e4
+	DefaultBlockPeriod = 3e3 //1e4
 	// TestnetBlockPeriod 3000 Millisecond, 3 Second
 	TestnetBlockPeriod = 3e3
 	// MainnetBlockPeriod 10000 Millisecond, 10 Second
