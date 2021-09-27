@@ -4,10 +4,16 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 ./init
 
-./start
+./start bootnodes
+./start validators
+./start proposers
+./start ca
 
 sleep 5
 
 ./deploy-contracts
+
+./stop ca
+./start civilians
 
 tail -f logs/p1.log

@@ -103,12 +103,38 @@ function start-ca() {
             2>&1 > logs/ca.log &
 }
 
-start-bootnodes
-start-validators
-start-proposers
-start-civilians
-start-ca
-# start-extra-proposers
 
-# 228 254 288 324 360
-# 26 34 36 36 
+target=$1
+
+if [ $target ]; then
+    case $target in
+    bootnodes)
+        start-bootnodes
+        ;;
+    validators)
+        start-validators
+        ;;
+    proposers)
+        start-proposers
+        ;;
+    civilians)
+        start-civilians
+        ;;
+    ca)
+        start-ca
+        ;;
+    extra-proposers)
+        start-extra-proposers
+        ;;
+    all)
+        start-bootnodes
+        start-validators
+        start-proposers
+        start-civilians
+        start-ca
+        ;;
+    *)
+        echo $target
+        ;;
+    esac
+fi
