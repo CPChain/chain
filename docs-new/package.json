@@ -1,0 +1,15 @@
+{
+  "name": "chain",
+  "version": "1.0.0",
+  "scripts": {
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
+  },
+  "main": "index.js",
+  "repository": "git@bitbucket.org:cpchain/chain.git",
+  "author": "blade_ly <blade_ly@aliyun.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.8.2"
+  }
+}
