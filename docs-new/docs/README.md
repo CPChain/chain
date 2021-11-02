@@ -14,7 +14,7 @@ Please mail to <info@cpchain.io> if you have any question.
 
 1.  `basic-info`{.interpreted-text role="ref"} and
     `abstract`{.interpreted-text role="ref"}
-2.  `fusion-api`{.interpreted-text role="ref"} and
+2.  [fusion-api](../api/cpc_fushion.md) and
     `rpc-api`{.interpreted-text role="ref"}
 3.  `quick-start-beginner`{.interpreted-text role="ref"} and
     `quick-start`{.interpreted-text role="ref"}

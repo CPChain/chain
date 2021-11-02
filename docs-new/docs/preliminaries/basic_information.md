@@ -24,7 +24,7 @@ This page lists all basic information of CPChain.
 
 **API**
 
-> `fusion-api`{.interpreted-text role="ref"} (Python)
+> [fusion-api](../api/cpc_fushion.md) (Python)
 >
 > `rpc-api`{.interpreted-text role="ref"}
 

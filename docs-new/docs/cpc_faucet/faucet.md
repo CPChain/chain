@@ -13,7 +13,7 @@ Mainnet. Refer to <https://cpchain.io/faucet/> to try it now.
 To apply for test coins, a wallet address is required. CPC fusion
 provides APIs for interested users to create a wallet address.
 
-1.  Refer to `fusion-api`{.interpreted-text role="ref"}, if you have yet
+1.  Refer to [fusion-api](../api/cpc_fushion.md), if you have yet
     installed CPC fusion.
 
 2.  You can choose either start a local chain, or sync with Alpha

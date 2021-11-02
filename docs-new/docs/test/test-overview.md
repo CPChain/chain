@@ -27,7 +27,7 @@ testing files are ending with `_test.go`. And each unit testing file
 contains several testing functions to examine its corresponding
 functionality given pairs of input and output.
 
-The functionality of `fusion-api`{.interpreted-text role="ref"} and
+The functionality of [fusion-api](../api/cpc_fushion.md) and
 `rpc-api`{.interpreted-text role="ref"} is also tested.
 
 ## Integration Testing

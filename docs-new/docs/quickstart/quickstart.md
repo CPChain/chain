@@ -39,7 +39,7 @@ Thus, We **strongly** encourage the users to adopt the latest version.
 But it is feasible to downgrade to a previous compatible version to
 circumvent certain bugs in the newer ones.
 
-You need to utilize either `fusion-api`{.interpreted-text role="ref"} or
+You need to utilize either [fusion-api](../api/cpc_fushion.md) or
 `rpc-api`{.interpreted-text role="ref"} for all available operations.
 
 You can always refer to
@@ -156,7 +156,7 @@ You can refer to `cpchain-run-fail`{.interpreted-text role="ref"} in
 Now you have connected to cpchain P2P network. And the progress is going
 to running for a while to sync with the chain.
 
-Employ either `fusion-api`{.interpreted-text role="ref"} or
+Employ either [fusion-api](../api/cpc_fushion.md) or
 `rpc-api`{.interpreted-text role="ref"} to wield the power as a civilian
 as well as assume corresponding responsibility.
 
@@ -202,7 +202,7 @@ requires you to enter the password to further proceed. You may use an
 argument `--password` to indicate a file storing your plaintext
 password. But it is risky, and we do not recommend it.
 
-If you are willing to use `fusion-api`{.interpreted-text role="ref"} and
+If you are willing to use [fusion-api](../api/cpc_fushion.md) and
 `rpc-api`{.interpreted-text role="ref"}, please use the following
 command:
 
