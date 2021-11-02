@@ -12,10 +12,7 @@ cases, and the rest are specializing in handling abnormal cases.
 The illustration below demonstrates these five states as well as
 transitions between states.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Not all transitions are shown in this figure due to the lack of space.
 :::

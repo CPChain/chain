@@ -4,6 +4,7 @@ module.exports = {
     themeConfig: {
         nav: [
           { text: 'Guide', link: '/' },
+          { text: 'API', link: '/api/rpc' },
           { text: 'Github', link: 'https://github.com/' },
         ],
         sidebar: [
@@ -77,6 +78,11 @@ module.exports = {
           },
         ],
         sidebarDepth: 2
+      },
+      markdown: {
+        toc: {
+          includeLevel:[1, 2, 3, 4]
+        }
       },
       configureWebpack: {
         resolve: {

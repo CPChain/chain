@@ -191,10 +191,7 @@ a prepare message and a commit message, respectively.
                     them explicitly in [Countermeasures for Illicit
                     Actions](#countermeasures-for-illicit-actions).
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 A validator repeats a validate message (or an impeach validate message)
 for the first time it receive it. This repetition process ensures the
@@ -263,10 +260,7 @@ impeachment process.
 
 Three things are noteworthy here.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 1.  Impeachment only requires two state instead of three in original
     PBFT.
@@ -439,10 +433,7 @@ type DporSnap struct {
 
 Before explaining these four fields, one thing is noteworthy here.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Despite the election is a random process, all random seeds are
 pre-defined, as the hash value of parent block. Thus, all nodes can

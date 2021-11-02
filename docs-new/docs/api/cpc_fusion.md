@@ -8,10 +8,7 @@ CPC fusion can be installed by using `pip` as follows:
 $ pip install cpc-fusion
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 If your `pip` is referring to the one in python2, please use the
 following command instead.
@@ -66,10 +63,7 @@ detailed information.
 34341
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 If you get the result
 `UnhandledRequest: No providers responded to the RPC request`, then you

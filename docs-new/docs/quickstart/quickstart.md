@@ -7,10 +7,7 @@ code. Both methods can been conducted on Linux, Mac or Windows operation
 system. Without loss of generality, all commands below are in Linux
 terminal format.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 All code starting with a `$` is meant to run in your terminal. All code
 starting with a `>>>` is meant to run in a python interpreter, like
@@ -19,10 +16,7 @@ starting with a `>>>` is meant to run in a python interpreter, like
 
 # Installation
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The functions of `console` has been integrated into `cpchain`. Versions
 after 0.2.11 no longer contains `console`.
@@ -104,10 +98,7 @@ as the path for default directory.
 $ ./cpchain account new -h
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 You can add `--datadir` option to specify the keystore directory.
 :::
@@ -131,20 +122,14 @@ $ ./cpchain run --rpcaddr 127.0.0.1:8501 \
     --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Please check the availability of the the default port `30310` (or the
 port you specified using `--port`) before connection. You may nominate
 other port as you wish.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Flags `--rpcaddr` and `--rpcapi` make APIs available in your node. You
 may discard them if you do not need any API. Please make sure the
@@ -158,10 +143,7 @@ temporary files by
 $ ./cpchain chain cleandb
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 You could specify datadir by adding `--datadir ./datadir`. Otherwise,
 this command will remove detabase in the default datadir. The port 8051
@@ -231,47 +213,32 @@ $ ./cpchain run \
     --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Please check the availability of the the default port `30310` (or the
 port you specified using `--port`) before connection. You may nominate
 other port as you wish.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 You should use `--datadir` option, if the account file is not read from
 default user directory.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 A flag `--account WALLET_ADDRESS` is required in case your `./datadir`
 directory contains more than one account file.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The argument `--mine` indicates this connection can be used for
 proposing blocks.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Flags `--rpcaddr` and `--rpcapi` make APIs available in your node. You
 may discard them if you do not need any API. Make sure the availability
@@ -313,10 +280,7 @@ which should shifted to `false`.
 After you stop mining, your deposit in RNode pool will be automatically
 refunded.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Similar to `./cpchain run`, you can use the command
 `./cpchain campaign --password YOUR_PASSWORD_FILE` where
@@ -333,10 +297,7 @@ $ ./cpchain-all.sh
 $ tail -f data/logs/*.log | grep number=
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 `cpchain-all.sh` launches the chain in dev mode.
 :::
@@ -351,19 +312,13 @@ Here `--runmode dev` is to prevent the node from connecting to Mainnet.
 
 # Smart Contract
 
-::: {.warning}
-::: {.title}
-Warning
-:::
+::: warning
 
 The solidity version for CPChain is 0.4.25. Other version is not
 guaranteed compatible with CPChain.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Refer to [Solidity](../solidity/index.html) for detailed information.
 :::
@@ -385,10 +340,7 @@ If you are willing to build solidity 0.4.25 from source code, please
 refer to the [Solidity
 Installation](../solidity/installing-solidity.html)
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 If you encounter any problem when running `solc`, please check
 `FAQ`{.interpreted-text role="ref"} page.
@@ -415,10 +367,7 @@ $ sudo apt-get install libz3-dev
 In our repository, we have several examples for smart contract. Please
 check files in `/docs/quickstart/`.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Please replace the values of `keystore`, `password` as well as `address`
 to yours.

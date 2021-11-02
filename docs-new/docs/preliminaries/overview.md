@@ -135,10 +135,7 @@ $RPT = 50\times AB +
 
 which leads to 10,000 full score of RPT.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 All scores for each dimension are evaluated within to a time window,
 which is latest 100 blocks. Data outside this window are no longer taken
@@ -321,10 +318,7 @@ Use smart contracts to lock deposit, the functions are as follow:
 -   CPU: Intel Xeon E5-1650 v3 (alike)
 -   Network: 300Mbps
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Some operation systems may have system processes with very large space
 or computing overheads running in background. An example is

@@ -20,7 +20,7 @@ This page lists all basic information of CPChain.
 
 **Deployment Documentation**
 
-> `quick-start-beginner`{.interpreted-text role="ref"}
+> [quick-start-beginner](../quickstart/quickstart-beginner)
 
 **API**
 

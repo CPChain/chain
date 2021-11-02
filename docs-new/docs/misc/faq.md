@@ -186,10 +186,7 @@ You can also utilize the command below to check your status.
 $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 You can use the flag `--password ./datadir/password` to input the
 password, similar to other `./cpchain campaign` commands.
@@ -256,10 +253,7 @@ From version 0.4.8, two commands are provided to delete useless files in
 ./cpchain chain compact
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 i\) You can use the flag `--datadir` to indicate your `cpchain` folder
 if your node is not stored in the default directory.

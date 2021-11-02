@@ -1,9 +1,6 @@
 # RPC API
 
-::: {.warning}
-::: {.title}
-Warning
-:::
+::: warning
 
 This page is under construction.
 :::
@@ -438,10 +435,7 @@ transactions.
 
 > `DATA`, The signed transaction data.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The input parameter for eth_sendRawTransaction can only be used once,
 computed by various variables like private key, nonce and gas.
@@ -516,10 +510,7 @@ Returns information about a block by block number.
 `Boolean` - If true it returns the full transaction objects, if false
 only the hashes of the transactions.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The unit of returned `timestamp` is *millisecond*, which is same as its
 corresponding cpc.getBlock() method in fusion API.
@@ -585,10 +576,7 @@ Returns information about a block by block number.
 `Boolean` - If true it returns the full transaction objects, if false
 only the hashes of the transactions.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The unit of returned `timestamp` is *millisecond*, which is same as its
 corresponding cpc.getBlock() method in fusion API.

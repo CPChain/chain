@@ -21,7 +21,7 @@ def modify_md_content(top):
                             open(copy_md_file_path, 'w', encoding='utf8') as fw:
                         data = fr.read()
                         #选择md文件中想要替换的字段
-                        data = re.sub(r'::: \{\.warning\}\n::: \{\.title\}\nWarning\n:::', '::: warning', data)
+                        data = re.sub(r'\.([ \t]{3,n})\|', '. |', data)
  
                         fw.write(data)  # 新文件一次性写入原文件内容
                         # fw.flush()
@@ -38,5 +38,5 @@ def modify_md_content(top):
  
  
 if __name__ == '__main__':
-    top = r'E:\chain-docs\chain\docs-new\docs'
+    top = r'E:\chain-docs\chain\docs-new\docs\misc'
     modify_md_content(top)

@@ -18,10 +18,7 @@ should download `amd64` version.
 For Mac user, please download `darwin` version. (Darwin forms the core
 of macOS)
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 All code starting with a `$` is meant to run in your terminal or cmd. Do
 not copy `$`, as it is not a part of a command.
@@ -38,10 +35,7 @@ For Windows users, use the commands below in cmd.
 $ cpchain-windows-4.0-amd64.exe account new
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Change `cpchain-windows-4.0-amd64.exe` to `cpchain-windows-4.0-386.exe`
 if you are using on 32 bit operation system.
@@ -69,20 +63,14 @@ For Linux and Mac users:
 $ ./cpchain account new -h
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 You may use `--datadir` option to specify the keystore directory.
 :::
 
 # Connect to Mainnet
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The capitalized VARIABLES requires your modification according to your
 own settings.
@@ -95,10 +83,7 @@ problem.
 
 This section is for users that are willing to propose new blocks.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Before mining a block, make sure that you the balance in your account is
 large enough (at least 200,000 cpc).
@@ -117,28 +102,19 @@ Linux and Mac users please use the following command:
 $ ./cpchain run --unlock WALLET_ADDRESS --mine
 ```
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 The default port 30310 (or the port you specified using `--port`) should
 be opened. Otherwise, other nodes cannot connect you in the P2P network.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 If you use `--datadir` option, the account file is read from your
 specified path.
 :::
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 A flag `--account WALLET_ADDRESS` is required in case your keystore
 directory contains more than one account file.
@@ -216,10 +192,7 @@ from [Download page](https://github.com/CPChain/chain/releases), and
 stop your currently running node, and replace the old version with the
 latest one.
 
-::: {.note}
-::: {.title}
-Note
-:::
+::: tip
 
 Please check `sig-ctrl-c`{.interpreted-text role="ref"}, if you cannot
 stop the node properly.
