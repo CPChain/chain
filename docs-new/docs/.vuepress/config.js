@@ -3,8 +3,8 @@ module.exports = {
     description: 'Just playing around',
     themeConfig: {
         nav: [
-          { text: 'Guide', link: '/' },
-          { text: 'API', link: '/api/rpc' },
+          { text: 'Guide', link: '/content/' },
+          { text: 'API', link: '/content/api/rpc' },
           { text: 'Github', link: 'https://github.com/' },
         ],
         sidebar: [
@@ -12,68 +12,68 @@ module.exports = {
             title: 'QUICK START',
             collapsable: false,
             children: [
-                '/quickstart/quickstart-beginner',
-                '/quickstart/quickstart'
+                '/content/quickstart/quickstart-beginner',
+                '/content/quickstart/quickstart'
             ]
           },
           {
             title: 'PRELIMINARIES',
             collapsable: false,
             children: [
-              '/preliminaries/abstract',
-              '/preliminaries/basic_information',
-              '/preliminaries/configuration',
-              '/preliminaries/installation',
-              '/preliminaries/overview'
+              '/content/preliminaries/abstract',
+              '/content/preliminaries/basic_information',
+              '/content/preliminaries/configuration',
+              '/content/preliminaries/installation',
+              '/content/preliminaries/overview'
             ]
           },
           {
             title: 'API',
             collapsable: false,
             children: [
-              '/api/rpc',
-              '/api/cpc_fusion'
+              '/content/api/rpc',
+              '/content/api/cpc_fusion'
             ]
           },
           {
             title: 'DETAILED ALGORITHMS',
             collapsable: false,
             children: [
-              '/detailed_algorithms/consensus',
-              '/detailed_algorithms/election',
-              '/detailed_algorithms/implementation'
+              '/content/detailed_algorithms/consensus',
+              '/content/detailed_algorithms/election',
+              '/content/detailed_algorithms/implementation'
             ]
           },
           {
             title: 'SMART CONTRACTS',
             collapsable: false,
             children: [
-              '/smart_contracts/built_in_sm',
-              '/smart_contracts/reward_sm'
+              '/content/smart_contracts/built_in_sm',
+              '/content/smart_contracts/reward_sm'
             ]
           },
           {
             title: 'TEST',
             collapsable: false,
             children: [
-              '/test/test-overview',
-              '/test/testcase'
+              '/content/test/test-overview',
+              '/content/test/testcase'
             ]
           },
           {
             title: 'PERFORMANCE',
             collapsable: false,
             children: [
-              '/performance/performance'
+              '/content/performance/performance'
             ]
           },
           {
             title: 'MISC',
             collapsable: false,
             children: [
-              '/misc/faq',
-              '/misc/glossary',
-              '/misc/mapping',
+              '/content/misc/faq',
+              '/content/misc/glossary',
+              '/content/misc/mapping',
             ]
           },
         ],

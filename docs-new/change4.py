@@ -2,41 +2,42 @@
 import os
 import re
 import time
- 
- 
+
+# 获取目录下所有交叉引用对应的标签，标题，文件名形成的字典，对应关系为标签为key，标题和文件名组成的list为value
 def modify_md_content(top):
+    dict_cross_referencing = {}
     for root, dirs, files in os.walk(top, topdown=False):
         # 循环文件
         for file_name in files:
             file_name_split = file_name.split('.')
  
             try:
-                if file_name_split[-1] == 'md':
-                    # 找到md文件并且复制一份md文件路径
+                if file_name_split[-1] == 'rst':
                     md_file_path = os.path.join(root, '.'.join(file_name_split))
-                    copy_md_file_path = os.path.join(root, '.'.join([f'{file_name_split[0]}_copy', file_name_split[1]]))
- 
-                    # 打开md文件然后进行替换
-                    with open(md_file_path, 'r', encoding='utf8') as fr, \
-                            open(copy_md_file_path, 'w', encoding='utf8') as fw:
+                    with open(md_file_path, 'r', encoding='utf8') as fr:
                         data = fr.read()
                         #选择md文件中想要替换的字段
-                        data = re.sub(r'\`fusion-api\`\{\.interpreted\-text[ \t]role\=\"ref\"\}', '[fusion-api](../api/cpc_fushion.md)', data)
+                        result = re.findall(r'\.\.[ \t]\_([\S]{2,})\:',data)
+                        for i in result:
+                            ttt=[]
+                            r_i = '.. _'+i+':'
+                            search_data = re.split(r_i,data)[1]
+                            result1 = re.search(r'([\S]{2,}[ \t\S]{0,})\n[\*\^\=\"\~\-\+\#]{4,}',search_data).group(1)
+                            ttt.append(result1)
+                            ttt.append(file_name)
+                            dict_cross_referencing[i]=ttt
  
-                        fw.write(data)  # 新文件一次性写入原文件内容
-                        # fw.flush()
- 
-                    # 删除原文件
-                    os.remove(md_file_path)
-                    # 重命名新文件名为原文件名
-                    os.rename(copy_md_file_path, md_file_path)
-                    print(f'{md_file_path} done...')
-                    time.sleep(0.5)
+                    time.sleep(0.1)
             except FileNotFoundError as e:
                 print(e)
-        time.sleep(0.5)
- 
- 
+        time.sleep(0.1)
+    return dict_cross_referencing
+
+def dist_retrun(old_file_path):
+    result = modify_md_content(old_file_path)
+    print(result)
+
+
 if __name__ == '__main__':
-    top = r'E:\chain-docs\chain\docs-new\docs'
-    modify_md_content(top)
+    old_file_path = r'E:\chain-docs\chain\docs'
+    dist_retrun(old_file_path)
