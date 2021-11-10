@@ -2,7 +2,7 @@
   "name": "chain",
   "version": "1.0.0",
   "scripts": {
-    "docs:dev": "vuepress dev docs",
+    "docs:dev": "vuepress dev docs --host 192.168.0.101 --port 8848",
     "docs:build": "vuepress build docs"
   },
   "main": "index.js",
@@ -11,5 +11,10 @@
   "license": "MIT",
   "devDependencies": {
     "vuepress": "^1.8.2"
+  },
+  "dependencies": {
+    "@renovamen/vuepress-plugin-katex": "^0.2.0",
+    "markdown-it": "^12.2.0",
+    "markdown-it-katex": "^2.0.3"
   }
 }

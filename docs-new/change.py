@@ -37,11 +37,23 @@ def modify_rst_content(file_dir):
                     rst_file_path = os.path.join(root, '.'.join(file_name_split))
                     md_file_path = re.sub(r'\.rst','.md',rst_file_path)
                     copy_rst_file_path = os.path.join(root, '.'.join([f'{file_name_split[0]}_copy', file_name_split[1]]))
+
+                    def convert1(value):  
+                            r_str_1 = value.group(1)
+                            r_str_2 = value.group(3)
+                            r_len = len(r_str_1)+len(r_str_2) + 10
+                            result = '\n' +'`class` '+ r_str_1 + '.'+ r_str_2 +'\n' + '+'*r_len +'\n'
+                            return result
+                    def convert2(value):  
+                            r_str_1 = value.group(1)
+                            r_len = len(r_str_1) + 10
+                            result = '\n' +'`class` '+ r_str_1  +'\n' + '+'*r_len +'\n'
+                            return result
                     with open(rst_file_path, 'r', encoding='utf8') as fr, \
                             open(copy_rst_file_path, 'w', encoding='utf8') as fw:
                         data = fr.read()
                         # 寻找标签
-                        result = re.findall(r'\.\.[ \t]\_([\S]{2,})\:',data)
+                        result = re.findall(r'\.\.[ \t]\_([\S]{2,})\:\n',data)
                         for i in result: # 寻找从标签开始的第一个标题
                             value_list=[]
                             r_i = '.. _'+i+':'
@@ -56,6 +68,9 @@ def modify_rst_content(file_dir):
                         # 查找所有表格，将其变成代码使pandoc不进行表格转译
                         data = re.sub(r'\n\n\+\-{5}','\n\n.. code-block:: table\n\t+-----',data) 
                         data = re.sub(r'([\+\|])\n([\|\+])',r'\1\n\t\2',data)
+                        data = re.sub(r'\.\.[ \t]py\:module\:\:[ \t]([\S \t]{3,})\n(\.\.[ \t]py\:currentmodule\:\:[ \t][\S \t]{3,}\n)?\n\.\.[ \t]py\:class\:\:[ \t]([\S \t]{3,})\n',convert1,data)
+                        data = re.sub(r'\.\.[ \t]py\:[\w]{4,}\:\:[ \t]([\S \t]{3,})\n',convert2,data) # sphinx 内置Python方法转换
+                        data = re.sub(r'\.\.[ \t]index\:\:[\S \t]{1,}\n','',data) # 删除索引
                         fw.write(data)  # 新文件一次性写入原文件内容
                         # fw.flush()
  
@@ -83,10 +98,23 @@ def modify_md_content(filedir,dict_c_r):
                     copy_md_file_path = os.path.join(root, '.'.join([f'{file_name_split[0]}_copy', file_name_split[1]]))
  
                     def convert(value):  # 返回标题和相对路径组成的字符串
-                        r_str = value.group(1).lower()
-                        r_find = dict_c_r[r_str] # 从字典中获取对应值
-                        r_title = r_find[0]
-                        r_path = r_find[1]
+                        r_str_1 = value.group(1).lower()
+                        r_str_2 = value.group(2)
+                        if r_str_2 == None:
+                            r_str = r_str_1
+                            r_find = dict_c_r.get(r_str,None) # 从字典中获取对应值
+                            if r_find == None:
+                                return '------>>>>>>' + r_str
+                            r_title = r_find[0]
+                            r_path = r_find[1]
+                        else:
+                            r_str_2 = re.sub(r'\<([\w\-]{1,})\>',r'\1',r_str_2)
+                            r_str = r_str_2.lower()
+                            r_find = dict_c_r.get(r_str,None) # 从字典中获取对应值
+                            if r_find == None:
+                                return '------>>>>>>' + r_str
+                            r_title = r_str_1
+                            r_path = r_find[1]
                         path1 = re.split(r'[\\]{1,}',md_file_path) # 分割路径
                         path2 = re.split(r'[\\]{1,}',r_path)
                         i = 0
@@ -99,13 +127,17 @@ def modify_md_content(filedir,dict_c_r):
                         k = len(path2)-i-1
                         if j == 0:
                             result1 = './'
+                        elif j == -1:
+                            result1 = ''
                         else:
                             result1 = '../'*j
                         if k == 0:
                             result2 = path2[i]
+                        elif k == -1:
+                            result2 = ''
                         else:
                             result2 = '/'.join(path2[i:])
-                        result = '[' + r_title +']' +'(' +result1 + result2 + ')'
+                        result = '[' + r_title +']' +'(' + result1 + result2 + '#' + r_title + ')'
                         return result
                     
                     # 打开md文件然后进行替换
@@ -113,10 +145,14 @@ def modify_md_content(filedir,dict_c_r):
                             open(copy_md_file_path, 'w', encoding='utf8') as fw:
                         data = fr.read()
                         #选择md文件中想要替换的字段
-                        data = re.sub(r'::: \{\.note\}\n::: \{\.title\}\nNote\n:::', '::: tip', data) # tip替换
+                        data = re.sub(r'(\>[ \t])?::: \{\.note\}\n(\>[ \t])?::: \{\.title\}\n(\>[ \t])?Note\n(\>[ \t])?:::', r'\1::: tip', data) # tip替换
                         data = re.sub(r'::: \{\.warning\}\n::: \{\.title\}\nWarning\n:::', '::: warning', data)
+                        data = re.sub(r'\!\[image\]\(','![image](./',data) # 考虑为非[image]标记的图片
+                        data = re.sub(r'\[([\w\-]{2,})\]\{\.title\-ref\}',r'*\1*',data)
+                        data = re.sub(r'\{\#([\w\-]{2,})\}','',data)
+                        data = re.sub(r'\#\#\#[ \t]\*class\*','#### *class*',data)
                         try:
-                            data = re.sub(r'\`([\w\-]{1,})\`\{\.interpreted\-text[ \t]role\=\"ref\"\}',convert,data) # 交叉引用替换
+                            data= re.sub(r'\`([\w\- \t\'\"\(\)]{1,}\n?[\w\- \t\'\"\(\)]{0,})(\<[\w\-]{1,}\>)?\`\{\.inte[\S \t]{0,}\n?[\S \t]{0,}ref\"\}',convert,data)
                         except Exception as e:
                             print('------||||||',e)
                         fw.write(data)  # 新文件一次性写入原文件内容
@@ -132,6 +168,9 @@ def modify_md_content(filedir,dict_c_r):
                 print(e)
         time.sleep(0.5)
 
+def move_md(old_file_path,new_file_path):  # 复制原有docs文件夹至新的目录下
+    shutil.move(old_file_path,new_file_path)
+
 
 def all_change(old,new):
     try:
@@ -145,7 +184,17 @@ def all_change(old,new):
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>3')
         modify_md_content(new,dict_c_r)
+        time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>4')
+        shutil.move('E:/chain-docs/chain/docs-new/docs/content/solidity','E:/chain-docs/chain/docs-new/docs')
+        time.sleep(0.5)
+        print('----------------------->>>>>>>>>>>>>>>>5')
+        shutil.copytree('E:/chain-docs/chain/docs-new/docs/content','E:/chain-docs/chain/docs-new/docs/zh/content')
+        time.sleep(0.5)
+        print('----------------------->>>>>>>>>>>>>>>>6')
+        shutil.copytree('E:/chain-docs/chain/docs-new/docs/solidity','E:/chain-docs/chain/docs-new/docs/zh/solidity')
+        time.sleep(0.5)
+        print('----------------------->>>>>>>>>>>>>>>>7')
     except Exception as e:
         print(e)
 
