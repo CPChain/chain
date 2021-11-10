@@ -117,6 +117,7 @@ def modify_md_content(filedir,dict_c_r):
                             r_path = r_find[1]
                         path1 = re.split(r'[\\]{1,}',md_file_path) # 分割路径
                         path2 = re.split(r'[\\]{1,}',r_path)
+                        anchor = re.sub(r'[ \t]','',r_title) # 去除目标锚点中的空格
                         i = 0
                         while i < len(path1): # 对比路径
                             if path1[i] == path2[i]:
@@ -137,7 +138,7 @@ def modify_md_content(filedir,dict_c_r):
                             result2 = ''
                         else:
                             result2 = '/'.join(path2[i:])
-                        result = '[' + r_title +']' +'(' + result1 + result2 + '#' + r_title + ')'
+                        result = '[' + r_title +']' +'(' + result1 + result2 + '#' + anchor + ')'
                         return result
                     
                     # 打开md文件然后进行替换

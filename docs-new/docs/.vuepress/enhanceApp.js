@@ -8,3 +8,10 @@
 //   }) => {
 //     // ...做一些其他的应用级别的优化
 //   }
+
+// import ElementPlus from 'element-plus';
+// import 'element-plus/dist/index.css'
+
+// export default ({ Vue, options, router }) => {
+//   Vue.use(ElementPlus);
+// };

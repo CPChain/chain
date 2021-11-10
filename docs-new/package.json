@@ -2,7 +2,7 @@
   "name": "chain",
   "version": "1.0.0",
   "scripts": {
-    "docs:dev": "vuepress dev docs --host 192.168.0.101 --port 8848",
+    "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs"
   },
   "main": "index.js",
