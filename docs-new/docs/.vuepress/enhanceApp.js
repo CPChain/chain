@@ -9,3 +9,9 @@
 //     // ...做一些其他的应用级别的优化
 //   }
 
+import Element from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+export default ({ Vue, options, router }) => {
+  Vue.use(Element);
+};
