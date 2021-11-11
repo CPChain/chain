@@ -3,6 +3,12 @@ import re
 import shutil
 import time
  
+def rm_exists_files(exist_file_path):
+    if os.path.exists(exist_file_path):
+        shutil.rmtree(exist_file_path)
+        print(exist_file_path)
+
+
 def copy_rst(old_file_path,new_file_path):  # 复制原有docs文件夹至新的目录下
     shutil.copytree(old_file_path,new_file_path)
     s_remove = os.path.join(new_file_path,'_build')
@@ -175,6 +181,10 @@ def move_md(old_file_path,new_file_path):  # 复制原有docs文件夹至新的�
 
 def all_change(old,new):
     try:
+        rm_exists_files(new)
+        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\solidity')
+        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\content')
+        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\solidity')
         copy_rst(old,new)
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>1')
