@@ -10,9 +10,7 @@ def rm_exists_files(exist_file_path):
 
 
 def copy_rst(old_file_path,new_file_path):  # 复制原有docs文件夹至新的目录下
-    shutil.copytree(old_file_path,new_file_path)
-    s_remove = os.path.join(new_file_path,'_build')
-    shutil.rmtree(s_remove)
+    shutil.copytree(old_file_path,new_file_path,ignore=shutil.ignore_patterns("_build"))
 
 # 批量转换markdown 确保 pip install 了pandoc 的最新版本
 def rst_to_md(file_dir):
