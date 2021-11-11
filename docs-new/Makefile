@@ -2,7 +2,10 @@ export version="0.0.1"
 
 all: build-image run-image
 
-prod:
+change:
+	@python change.py
+
+prod: change
 	@yarn run docs:build
 
 build-image: prod
