@@ -144,7 +144,97 @@ def modify_md_content(filedir,dict_c_r):
                             result2 = '/'.join(path2[i:])
                         result = '[' + r_title +']' +'(' + result1 + result2 + '#' + anchor + ')'
                         return result
-                    
+
+
+                    def convert_table(value):
+                        matched = '\n'+ value.group(1) +'\n' # 获取表格
+                        matched = re.sub(r'([^\-\n\=])\+([^\-\n\=])',r'\1need_to_change_at_end\2',matched)
+                        Table = re.split(r'\n\+[\=\+]{5,}\n',matched) # 分割表头表内容
+                        if len(Table) == 2: # 判断有无表头
+                            Th = Table[0] # 表头
+                            Td = Table[1] # 表内容
+                            Th_rows = re.split(r'\n\+[\+\-]{5,}\n',Th) # 分割成row
+                            Th_rows = Th_rows[1:] # 去除为空的第一项
+                            Th_row_list = []
+                            Th_row_list_len = [] # 表头 row 里的列数
+                            Td_row_list = []  # 表格内容 里所有row的集合
+                            Td_rows = re.split(r'\n\+[\+\-]{5,}\n',Td)  # 分割成大行row
+                            Td_rows = Td_rows[:-1] # 去除为空的最后一项
+                            for row in Th_rows:
+                                col_list = re.split(r'\|',row)
+                                col_list = col_list[1:-1]
+                                Th_row_list_len.append(len(col_list))
+
+                            for j in range(0,len(Th_rows)):
+                                col_list = re.split(r'\|',Th_rows[j])
+                                col_list = col_list[1:-1]
+                                col_colspan = str(int(max(Th_row_list_len)/Th_row_list_len[j]))
+                                for k in range(0,len(col_list)):
+                                    col_list[k] ='<th colspan="' + col_colspan + '">' + col_list[k] +'</th>'
+                                Th_row_tr = '<tr>\n' + '\n'.join(col_list) + '\n</tr>'
+                                Th_row_list.append(Th_row_tr)
+                            Th_row_all = '\n'.join(Th_row_list)
+
+                        elif len(Table) == 1:
+                            Td = Table[0]
+                            Th_row_all = ''
+                            Td_row_list = []  # 表格内容 里所有row的集合
+                            Td_rows = re.split(r'\n\+[\+\-]{5,}\n',Td)  # 分割成大行row
+                            Td_rows = Td_rows[1:-1] # 去除为空的最后一项
+
+                        for row in Td_rows: # 对每个row进行处理
+                            # print(row)
+                            row_col_list = []  # row 的 col 的集合
+                            row_col_list_len = [] # row 里 每一列 的行数
+
+                            Td_row_tr_list = [] # 表格内容 里每一行的所有tr的集合
+                            line_list = re.split(r'\n',row) # 按换行切割row为line
+                            # print(lines)
+                            i = 0
+                            while i < len(line_list):
+                                line_col_list = re.split(r'[\|\+]',line_list[i]) # 根据 | 或者 + 分割每一个 line 成col ，之后组合每一line的col ，即每一大行里的每一列合成为一个字符串
+                                if i == 0:
+                                    for j in range(0,len(line_col_list)):
+                                        row_col_list.append(line_col_list[j])
+                                else:
+                                    for j in range(0,len(line_col_list)):
+                                        row_col_list[j ]= row_col_list[j] + line_col_list[j]
+                                i = i + 1
+                            row_col_list = row_col_list[1:-1] # 去除空值
+                            for j in range(0,len(row_col_list)):
+                                row_col_list[j]=re.sub(r'[ \t]{2,}',' ',row_col_list[j])
+                                row_col_list[j]=re.split(r'\-{4,}',row_col_list[j]) # 对每一列按照'--------'进行分割
+                                row_col_list_len.append(len(row_col_list[j])) # 记录每一列的行数
+                            
+
+
+                            for t in range(0,max(row_col_list_len)):
+                                Td_row_tr_td_list =[]
+                                for j in range(0,len(row_col_list)):
+                                    if t < row_col_list_len[j]:
+                                        Td_row_tr_td_rowspan = str(int((max(row_col_list_len))/row_col_list_len[j])) # 每一个 td 里的rowspan的值
+                                        Td_row_tr_td =' <td  rowspan="'+ Td_row_tr_td_rowspan + '">' + row_col_list[j][t] + '</td>' # 合成每一个td
+                                        Td_row_tr_td_list.append(Td_row_tr_td) 
+                                    else:
+                                        pass
+                                Td_row_tr_list.append(Td_row_tr_td_list)
+                            for h in range(0,len(Td_row_tr_list)): 
+                                Td_row_tr_list[h]= '\n'.join(Td_row_tr_list[h]) # 每一个tr里的td join成一个字符串
+                                Td_row_tr_list[h]= '<tr>'+ Td_row_tr_list[h] + '</tr>' # 合成每一个tr
+                                            
+                            Td_row_tr_all = '\n'.join(Td_row_tr_list) # 每一行所有的tr合成为一个字符串
+                            Td_row_list.append(Td_row_tr_all)
+                        Td_row_all = '\n'.join(Td_row_list) # 所有的row,join成一个字符串
+                        result_start = '<table cellspacing="0" cellpadding="5">\n'
+                        result_end = '\n</table>'
+                        result = result_start + Th_row_all + '\n' + Td_row_all + result_end
+                        result = re.sub(r'need\_to\_change\_at\_end','+',result)
+                        return result
+
+
+
+
+
                     # 打开md文件然后进行替换
                     with open(md_file_path, 'r', encoding='utf8') as fr, \
                             open(copy_md_file_path, 'w', encoding='utf8') as fw:
@@ -158,8 +248,10 @@ def modify_md_content(filedir,dict_c_r):
                         data = re.sub(r'\#\#\#[ \t]\*class\*','#### *class*',data)
                         try:
                             data= re.sub(r'\`([\w\- \t\'\"\(\)]{1,}\n?[\w\- \t\'\"\(\)]{0,})(\<[\w\-]{1,}\>)?\`\{\.inte[\S \t]{0,}\n?[\S \t]{0,}ref\"\}',convert,data)
+                            data = re.sub(r'\`\`\`[ \t]\{\.table\n([\S\n \t]{1,}?)\}\n\`\`\`',convert_table,data)
                         except Exception as e:
                             print('------||||||',e)
+                        
                         fw.write(data)  # 新文件一次性写入原文件内容
                         # fw.flush()
  
