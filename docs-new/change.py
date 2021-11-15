@@ -273,9 +273,9 @@ def move_md(old_file_path,new_file_path):  # 复制原有docs文件夹至新的�
 def all_change(old,new):
     try:
         rm_exists_files(new)
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\solidity')
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\content')
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\solidity')
+        rm_exists_files(os.path.abspath(os.path.join(new,"../solidity")))
+        rm_exists_files(os.path.abspath(os.path.join(new,"../zh/content")))
+        rm_exists_files(os.path.abspath(os.path.join(new,"../zh/solidity")))
         copy_rst(old,new)
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>1')
@@ -288,13 +288,13 @@ def all_change(old,new):
         modify_md_content(new,dict_c_r)
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>4')
-        shutil.move('E:/chain-docs/chain/docs-new/docs/content/solidity','E:/chain-docs/chain/docs-new/docs')
+        shutil.move(os.path.abspath(os.path.join(new,"solidity")),os.path.abspath(os.path.join(new,"..")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>5')
-        shutil.copytree('E:/chain-docs/chain/docs-new/docs/content','E:/chain-docs/chain/docs-new/docs/zh/content')
+        shutil.copytree(new,os.path.abspath(os.path.join(new,"../zh/content")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>6')
-        shutil.copytree('E:/chain-docs/chain/docs-new/docs/solidity','E:/chain-docs/chain/docs-new/docs/zh/solidity')
+        shutil.copytree(os.path.abspath(os.path.join(new,"../solidity")),os.path.abspath(os.path.join(new,"../zh/solidity")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>7')
     except Exception as e:
@@ -302,6 +302,6 @@ def all_change(old,new):
 
 
 if __name__ == '__main__':
-    old = r'E:\chain-docs\chain\docs'
-    new = r'E:\chain-docs\chain\docs-new\docs\content'
+    new = os.path.abspath(os.path.join(os.getcwd(),"docs/content"))
+    old = os.path.abspath(os.path.join(os.getcwd(), "../docs"))
     all_change(old,new)
