@@ -171,9 +171,9 @@ def modify_md_content(filedir,dict_c_r):
                                 col_colspan = str(int(max(Th_row_list_len)/Th_row_list_len[j]))
                                 for k in range(0,len(col_list)):
                                     col_list[k] ='<th colspan="' + col_colspan + '">' + col_list[k] +'</th>'
-                                Th_row_tr = '<tr>\n' + '\n'.join(col_list) + '\n</tr>'
+                                Th_row_tr = '<tr>\n\t\t' + '\n\t\t'.join(col_list) + '\n\t</tr>'
                                 Th_row_list.append(Th_row_tr)
-                            Th_row_all = '\n'.join(Th_row_list)
+                            Th_row_all = '\n\t'.join(Th_row_list)
 
                         elif len(Table) == 1:
                             Td = Table[0]
@@ -213,22 +213,23 @@ def modify_md_content(filedir,dict_c_r):
                                 for j in range(0,len(row_col_list)):
                                     if t < row_col_list_len[j]:
                                         Td_row_tr_td_rowspan = str(int((max(row_col_list_len))/row_col_list_len[j])) # 每一个 td 里的rowspan的值
-                                        Td_row_tr_td =' <td  rowspan="'+ Td_row_tr_td_rowspan + '">' + row_col_list[j][t] + '</td>' # 合成每一个td
+                                        Td_row_tr_td ='<td  rowspan="'+ Td_row_tr_td_rowspan + '">' + row_col_list[j][t] + '</td>' # 合成每一个td
                                         Td_row_tr_td_list.append(Td_row_tr_td) 
                                     else:
                                         pass
                                 Td_row_tr_list.append(Td_row_tr_td_list)
                             for h in range(0,len(Td_row_tr_list)): 
-                                Td_row_tr_list[h]= '\n'.join(Td_row_tr_list[h]) # 每一个tr里的td join成一个字符串
-                                Td_row_tr_list[h]= '<tr>'+ Td_row_tr_list[h] + '</tr>' # 合成每一个tr
+                                Td_row_tr_list[h]= '\n\t\t'.join(Td_row_tr_list[h]) # 每一个tr里的td join成一个字符串
+                                Td_row_tr_list[h]= '<tr>\n\t\t'+ Td_row_tr_list[h] + '\n\t</tr>' # 合成每一个tr
                                             
-                            Td_row_tr_all = '\n'.join(Td_row_tr_list) # 每一行所有的tr合成为一个字符串
+                            Td_row_tr_all = '\n\t'.join(Td_row_tr_list) # 每一行所有的tr合成为一个字符串
                             Td_row_list.append(Td_row_tr_all)
-                        Td_row_all = '\n'.join(Td_row_list) # 所有的row,join成一个字符串
-                        result_start = '<table cellspacing="0" cellpadding="5">\n'
+                        Td_row_all = '\n\t'.join(Td_row_list) # 所有的row,join成一个字符串
+                        result_start = '<table cellspacing="0" cellpadding="5">\n\t'
                         result_end = '\n</table>'
-                        result = result_start + Th_row_all + '\n' + Td_row_all + result_end
+                        result = result_start + Th_row_all + '\n\t' + Td_row_all + result_end
                         result = re.sub(r'need\_to\_change\_at\_end','+',result)
+                        result = re.sub(r'\`\`([^\`\n]{2,}?)\`\`',r'<code>\1</code>',result)
                         return result
 
 
