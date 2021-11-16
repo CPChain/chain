@@ -6,7 +6,7 @@ RUN apt-get update -y && apt-get -y install nodejs
 
 RUN npm install -g yarn 
 
-COPY ./docs-new /usr/src/docs-new
+COPY . /usr/src/docs-new
 
 WORKDIR /usr/src/docs-new
 
