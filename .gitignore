@@ -14,12 +14,9 @@
 */**/*tx_database*
 */**/*dapps*
 build/_vendor/pkg
-docs-new/docs/content/
 docs-new/change-table.py
 docs-new/docs/.vuepress/dist/
-docs-new/docs/solidity/docs/
-docs-new/docs/zh/solidity/
-docs-new/docs/zh/content/
+
 
 
 #*

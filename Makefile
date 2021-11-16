@@ -259,3 +259,10 @@ docker-build-abigen:
 	@cp docker/abigen/Dockerfile .
 	@docker build -t cpchain2018/abigen .
 	@rm Dockerfile
+
+
+new-docs:
+	@docker-compose -f docs/docker/docker-compose.yml run -e CPC_VERSION=0.5.2 --rm docs sphinx-build -b html ./ _build
+
+new-docs-serve:
+	@docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py

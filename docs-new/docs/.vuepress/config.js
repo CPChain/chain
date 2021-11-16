@@ -30,7 +30,7 @@ module.exports = {
           },
           algolia: {},
           nav: [
-            { text: 'Guide', link: '/content/' },
+            { text: 'Guide', link: '/content/index' },
             { text: 'API', link: '/content/api/rpc' },
             { text: 'solidity', link: '/solidity/docs/' },
             { text: 'Github', link: 'https://github.com/' },
