@@ -121,7 +121,8 @@ def modify_md_content(filedir,dict_c_r):
                             r_path = r_find[1]
                         path1 = re.split(r'[\\]{1,}',md_file_path) # 分割路径
                         path2 = re.split(r'[\\]{1,}',r_path)
-                        anchor = re.sub(r'[ \t]','',r_title) # 去除目标锚点中的空格
+                        anchor = re.sub(r'[ \t\_\.\/\(\)]','-',r_title) # 转换标题为对应锚点
+                        anchor = re.sub(r'\-{2,}','-',anchor).lower() 
                         i = 0
                         while i < len(path1): # 对比路径
                             if path1[i] == path2[i]:
@@ -198,7 +199,7 @@ def modify_md_content(filedir,dict_c_r):
                                         row_col_list.append(line_col_list[j])
                                 else:
                                     for j in range(0,len(line_col_list)):
-                                        row_col_list[j ]= row_col_list[j] + line_col_list[j]
+                                        row_col_list[j]= row_col_list[j] + line_col_list[j]
                                 i = i + 1
                             row_col_list = row_col_list[1:-1] # 去除空值
                             for j in range(0,len(row_col_list)):
@@ -232,7 +233,15 @@ def modify_md_content(filedir,dict_c_r):
                         result = re.sub(r'\`\`([^\`\n]{2,}?)\`\`',r'<code>\1</code>',result)
                         return result
 
-
+                    def convert_extra(value):
+                        matched = value.group(1)
+                        if matched == 'cpc_fusion.cpc':
+                            return '[CPC](#class-cpc-fusion-cpc-cpc)'
+                        else:
+                            title = re.sub(r'cpc\_fusion\.cpc\.','',matched)
+                            anchor = re.sub(r'\.',r'-',title)
+                            anchor = re.sub(r'\(\)','',anchor).lower()
+                            return '[' + title +'](#' + anchor + ')'
 
 
 
@@ -249,6 +258,7 @@ def modify_md_content(filedir,dict_c_r):
                         data = re.sub(r'\#\#\#[ \t]\*class\*','#### *class*',data)
                         try:
                             data= re.sub(r'\`([\w\- \t\'\"\(\)]{1,}\n?[\w\- \t\'\"\(\)]{0,})(\<[\w\-]{1,}\>)?\`\{\.inte[\S \t]{0,}\n?[\S \t]{0,}ref\"\}',convert,data)
+                            data= re.sub(r'\`\~([\w\- \t\.\(\)]{1,})\`\{\.interpreted-text[ \t]role="[\w]{2,}"}',convert_extra,data)
                             data = re.sub(r'\`\`\`[ \t]\{\.table\n([\S\n \t]{1,}?)\}\n\`\`\`',convert_table,data)
                         except Exception as e:
                             print('------||||||',e)
@@ -273,9 +283,9 @@ def move_md(old_file_path,new_file_path):  # 复制原有docs文件夹至新的�
 def all_change(old,new):
     try:
         rm_exists_files(new)
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\solidity')
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\content')
-        rm_exists_files(r'E:\chain-docs\chain\docs-new\docs\zh\solidity')
+        rm_exists_files(os.path.abspath(os.path.join(new,"../solidity")))
+        rm_exists_files(os.path.abspath(os.path.join(new,"../zh/content")))
+        rm_exists_files(os.path.abspath(os.path.join(new,"../zh/solidity")))
         copy_rst(old,new)
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>1')
@@ -288,13 +298,13 @@ def all_change(old,new):
         modify_md_content(new,dict_c_r)
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>4')
-        shutil.move('E:/chain-docs/chain/docs-new/docs/content/solidity','E:/chain-docs/chain/docs-new/docs')
+        shutil.move(os.path.abspath(os.path.join(new,"solidity")),os.path.abspath(os.path.join(new,"..")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>5')
-        shutil.copytree('E:/chain-docs/chain/docs-new/docs/content','E:/chain-docs/chain/docs-new/docs/zh/content')
+        shutil.copytree(new,os.path.abspath(os.path.join(new,"../zh/content")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>6')
-        shutil.copytree('E:/chain-docs/chain/docs-new/docs/solidity','E:/chain-docs/chain/docs-new/docs/zh/solidity')
+        shutil.copytree(os.path.abspath(os.path.join(new,"../solidity")),os.path.abspath(os.path.join(new,"../zh/solidity")))
         time.sleep(0.5)
         print('----------------------->>>>>>>>>>>>>>>>7')
     except Exception as e:
@@ -302,6 +312,6 @@ def all_change(old,new):
 
 
 if __name__ == '__main__':
-    old = r'E:\chain-docs\chain\docs'
-    new = r'E:\chain-docs\chain\docs-new\docs\content'
+    new = os.path.abspath(os.path.join(os.getcwd(),"docs/content"))
+    old = os.path.abspath(os.path.join(os.getcwd(), "../docs"))
     all_change(old,new)

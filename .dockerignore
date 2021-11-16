@@ -10,3 +10,8 @@ build/_workspace
 build/_bin
 build/bin/data-fast
 tests/testdata
+
+docs/_build/
+docs-new/node_modules
+
+node_modules
