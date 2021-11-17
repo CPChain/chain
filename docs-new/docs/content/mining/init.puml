@@ -1,0 +1,89 @@
+@startuml
+
+|run|
+start
+:run();
+:n := createNode(ctx);
+
+|createNode|
+:registerChainService();
+
+|registerChainService|
+:n.Register();
+
+|run|
+:bootstrap(ctx, n);
+
+|bootstrap|
+:startNode(n);
+
+|startNode|
+:n.Start();
+
+|n.Start|
+:other operations;
+while (for each service)
+  :constructor(ctx);
+  note right:when the service is 'ChainService'
+  |chain service|
+  :cpc.New(ctx, cfg);
+  |cpc.New|
+  :create CpchainService instance 'cpc';
+  :cpc.engine = CreateConsensusEngine(ctx, chainConfig, chainDb);
+  :cpc.blockchain = core.NewBlockChain();
+  :cpc.txPool = core.NewTxPool();
+  :cpc.miner = miner.New();
+  |miner.New|
+  :eng:newEngine();
+  |newEngine|
+  :eng := &engine{};
+  :go eng.update();
+  :go eng.wait();
+  :eng.commitNewWork();
+  |commitNewWork|
+  :engine.PrepareBlock();
+  |PrepareBlock|
+  :get dpor snapshot;
+  :do prepare work;
+
+  |commitNewWork|
+  :self.makeCurrentWork(<new header>);
+  :retrieve txs to seal by sorting of price and nonce;
+  :commitTransactions();
+  :finalize block by consensus;
+  :push work to queue for miners;
+  :self.updateSnapshot();
+  |newEngine|
+
+  |miner.New|
+  :miner.Register();
+  :go miner.update();
+
+  |cpc.New|
+  :cpc.APIBackend = &APIBackend{cpc};
+  :cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend();
+
+  |chain service|
+  if ("mine" flag is present) then (yes)
+  	:SetAsMiner(true);
+  endif
+
+|n.Start|
+endwhile (finished)
+:other operations;
+
+|startNode|
+:RegisterPrimitiveContracts(n);
+
+
+:unlockAccounts(ctx, n);
+:handleWallet(n);
+:startMining(ctx, n);
+:// handle user interrupt;
+:go handleInterrupt(n);
+
+|run|
+:n.Wait();
+stop
+
+@enduml
