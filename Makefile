@@ -232,37 +232,9 @@ dev-init:
 dev-tools:
 	go get -u github.com/fjl/gencodec
 
-docs:
-	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run -e CPC_VERSION=$$(git describe --tags `git rev-list --tags --max-count=1`) --rm docs sphinx-build -b html ./ _build
-
-docs-serve:
-	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py
-
-docs-serve-clean:
-	docker rm -f cpchain_docs
-
-docs-clean:
-	rm -fr docs/_build
-
-docs-mv-solidity:
-	rm -rf docs/_build/solidity
-	mkdir docs/_build/solidity
-
-docs-cp-solidity:
-	cp -rf docs/solidity/docs/_build/* docs/_build/solidity/
-
-docs-solidity: docs-mv-solidity docs-cp-solidity
-
 docker-build-abigen:
 	# @docker run -i --rm -v $(ROOT_DIR):/go/src/bitbucket.org/cpchain/chain \
     #             golang:1.11.1 /bin/bash -c "cd /go/src/bitbucket.org/cpchain/chain && make abigen"
 	@cp docker/abigen/Dockerfile .
 	@docker build -t cpchain2018/abigen .
 	@rm Dockerfile
-
-
-new-docs:
-	@docker-compose -f docs/docker/docker-compose.yml run -e CPC_VERSION=0.5.2 --rm docs sphinx-build -b html ./ _build
-
-new-docs-serve:
-	@docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py
