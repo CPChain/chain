@@ -1,0 +1,150 @@
+@startuml
+
+package accounts
+
+package admission
+
+package api {
+  package cpclient
+  package grpc
+  package rpc
+}
+
+package cmd
+
+package commons
+
+package configs
+
+package consensus {
+  package dpor
+}
+
+package contracts
+
+package core {
+  package vm
+}
+
+package database as "persistence layer"
+
+package internal
+
+package miner
+
+package node
+
+package private
+
+package protocols {
+  package cpc
+}
+
+package types as "data layer"
+
+accounts --> types
+accounts --> commons
+
+admission --> accounts
+admission --> api
+admission --> commons
+admission --> configs
+admission --> consensus
+admission --> contracts
+admission --> types
+
+api --> types
+api --> commons
+rpc --> commons
+grpc --> types
+grpc --> commons
+cpclient --> rpc
+cpclient --> types
+
+cmd --> accounts
+cmd --> commons
+cmd --> consensus
+cmd --> api
+cmd --> contracts
+cmd --> internal
+cmd --> node
+cmd --> protocols
+cmd --> configs
+cmd --> core
+cmd --> database
+cmd --> types
+
+configs --> commons
+
+core --> vm
+
+consensus --> api
+consensus --> accounts
+consensus --> commons
+consensus --> configs
+consensus --> contracts
+consensus --> database
+consensus --> types
+
+contracts --> api
+contracts --> accounts
+contracts --> configs
+contracts --> commons
+contracts --> types
+
+core --> types
+core --> configs
+core --> commons
+core --> consensus
+core --> database
+
+database --> commons
+
+internal --> accounts
+internal --> api
+internal --> core
+internal --> commons
+internal --> configs
+internal --> database
+internal --> protocols
+internal --> private
+internal --> types
+
+miner --> accounts
+miner --> commons
+miner --> configs
+miner --> consensus
+miner --> core
+miner --> database
+miner --> protocols
+miner --> types
+
+node --> accounts
+node --> api
+node --> database
+node --> internal
+node --> admission
+node --> configs
+
+private --> database
+private --> accounts
+private --> types
+
+protocols --> accounts
+protocols --> admission
+protocols --> api
+protocols --> commons
+protocols --> consensus
+protocols --> contracts
+protocols --> core
+protocols --> database
+protocols --> internal
+protocols --> miner
+protocols --> node
+protocols --> private
+protocols --> types
+
+types --> configs
+types --> commons
+
+@enduml

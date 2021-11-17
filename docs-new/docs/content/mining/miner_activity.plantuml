@@ -1,0 +1,52 @@
+@startuml
+
+|miner|
+start
+:Start()  [miner/miner.go];
+
+|mine engine|
+:start()  [miner/mine_engine.go];
+while (workers)
+|worker|
+:start()  [miner/worker.go];
+fork
+stop
+fork again
+:go self.update();
+|goroutine update()|
+while (wait for work item) IS (has work)
+  :go self.mine();
+  |goroutine mine()|
+  :engine.Seal();
+endwhile (stop)
+|goroutine update()|
+end fork
+
+endwhile (all workers started)
+|mine engine|
+:commitNewWork()  [miner/mine_engine.go];
+:consensusEngine.PrepareBlock  [miner/mine_engine.go]
+:makeCurrentWork();  [miner/mine_engine.go]
+|work item|
+:commitTransactions()  [miner/worker.go];
+|mine engine|
+:consensusEngine.Finalize();
+while (workers) IS (each work)
+:worker.Work() <- workItem;
+endwhile (exit and wait)
+
+fork
+:updateSnapshot()    [miner/mine_engine.go];
+fork again
+|goroutine wait() [main_engine.go]|
+while (wait for worker's result)
+:WriteBlockWithState()  [core/blockchain.go];
+:Post event (NewMinedBlockEvent);
+:PostChainEvents();
+note right:post events
+endwhile
+end fork
+|mine engine|
+stop
+
+@enduml

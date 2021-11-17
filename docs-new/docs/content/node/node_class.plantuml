@@ -1,0 +1,121 @@
+@startuml
+
+class Node {
+	eventmux *event.TypeMux
+	config   *Config
+	accman   *accounts.Manager
+	ephemeralKeystore string
+	instanceDirLock   flock.Releaser
+	serverConfig p2p.Config
+	server       *p2p.Server
+	serviceFuncs []ServiceConstructor
+	services     map[reflect.Type]Service
+	rpcAPIs       []rpc.API
+	inprocHandler *rpc.Server
+	ipcEndpoint string
+	ipcListener net.Listener
+	ipcHandler  *rpc.Server
+	httpEndpoint  string
+	httpWhitelist []string
+	httpListener  net.Listener
+	httpHandler   *rpc.Server
+	wsEndpoint string
+	wsListener net.Listener
+	wsHandler  *rpc.Server
+	stop chan
+	lock sync.RWMutex
+	log log.Logger
+}
+
+
+class Config {
+	Name string
+	UserIdent string
+	Version string
+	DataDir string
+	P2P p2p.Config
+	KeyStoreDir string
+	UseLightweightKDF bool
+	NoUSB bool
+	IPCPath string
+	HTTPHost string
+	HTTPPort int
+	HTTPCors []string
+	HTTPVirtualHosts []string
+	HTTPModules []string
+	WSHost string
+	WSPort int
+	WSOrigins []string
+	WSModules []string
+	WSExposeAll bool //expose private & public APIs
+	Logger log.Logger
+	RsaKeyStore *rsakey.RsaKey
+
+	IPCEndpoint()
+    NodeDB()
+    HTTPEndpoint()
+    WSEndpoint()
+    NodeName()
+    resolvePath(path string)
+    NodeKey()
+    RsaKey()
+    StaticNodes()
+    TrustedNodes()
+    AccountConfig()
+}
+
+class p2p.Config {
+}
+
+Config "1" *-- "1" p2p.Config
+
+class api.Config {
+}
+
+Config "1" *-- "1" api.Config
+
+class accounts.Backend
+
+Config ...> accounts.Backend : ref
+Config ...> accounts.Manager : create
+
+Node ...> Config
+
+class ServiceContext {
+	config         *Config
+	services       map[reflect.Type]Service
+	EventMux       *event.TypeMux
+	AccountManager *accounts.Manager
+
+	OpenDatabase()
+	ResolvePath()
+	Service()
+	RsaKey()
+}
+
+ServiceContext "1" o-- "1" Config
+
+interface Service {
+	Protocols() []p2p.Protocol
+	APIs() []rpc.API
+	GAPIs() []api.GApi
+	Start(server *p2p.Server) error
+	Stop() error
+}
+
+package ptotocols.cpc {
+  class CpchainService
+  New ...> CpchainService : create
+  CpchainService ...|> Service : implement
+  New ...> ServiceContext : use
+}
+
+Node "1" *-- "*" Service
+ServiceContext "1" o-- "*" Service
+
+class ServiceConstructor
+
+Node "1" *-- "*" ServiceConstructor
+ServiceConstructor ...> Service : create
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml
+
+participant Node as n
+participant "p2p/Server" as ps
+
+[-> n: New
+
+
+[-> n: Register
+n -> n : append(serviceFuncs, ctor)
+activate n
+deactivate n
+...
+
+[-> n: Start
+activate n
+loop foreach serviceFuncs
+n -> n : call each serviceFunc \n [constructor to create **service**]
+n -> n : services[kind] = service
+end
+
+create ps
+n -> ps : create object [**running**]
+
+loop foreach service in services
+n -> ps : add service.Protocol to Protocols
+activate ps
+deactivate ps
+end
+
+n -> ps : Start
+activate ps
+participant "goroutine serv.run" as grsrvrun
+create grsrvrun
+ps -> grsrvrun : go srv.run(dialer)
+deactivate ps
+
+loop
+grsrvrun -> grsrvrun : scheduleTasks
+end
+
+loop foreach service in services
+n -> n : service.Start([**running**])
+end
+
+n -> n : startRPC(services)
+activate n
+n -> n : startInProc(apis)
+n -> n : startIPC(apis)
+n -> n : startHTTP(apis)
+n -> n : startWS(apis)
+n --> n : error if exists
+deactivate n
+n -> n : create [**stop**] channel
+[<-- n : error if exists
+deactivate n
+
+
+@enduml

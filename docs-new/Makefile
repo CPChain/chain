@@ -8,7 +8,7 @@ change:
 prod: change
 	@yarn run docs:build
 
-build-image: prod
+build-image:
 	@docker build -t cpchain-chain-docs:$(version) .
 
 run-image:
