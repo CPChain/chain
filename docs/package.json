@@ -1,0 +1,22 @@
+{
+  "name": "chain",
+  "version": "1.0.0",
+  "scripts": {
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
+  },
+  "main": "index.js",
+  "repository": "git@bitbucket.org:cpchain/chain.git",
+  "author": "blade_ly <blade_ly@aliyun.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.8.2"
+  },
+  "dependencies": {
+    "@renovamen/vuepress-plugin-katex": "^0.2.0",
+    "async-validator": "1.11.5",
+    "element-ui": "^2.15.6",
+    "markdown-it": "^12.2.0",
+    "markdown-it-katex": "^2.0.3"
+  }
+}
