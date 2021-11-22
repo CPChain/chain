@@ -180,3 +180,46 @@ func TestMakeSigner(t *testing.T) {
 		t.Error("The signer should be types.Cep1Signer, but got ", fmt.Sprintf("%T", signer))
 	}
 }
+
+func toHexInt(n *big.Int) string {
+	return fmt.Sprintf("%x", n) // or %x or upper case
+}
+
+func TestDecode(t *testing.T) {
+	raw := "f8718016850430e23400825208940522ebf8180cd4c49172ddebcd627c685118c295881bc16d674ec80000808430373039a049b2ee4936b0e1cd53a9a078ba3b544fcb12760854c303ca6b38feef3614ae5ea02bed7bfef1cdd33763cc22f9d5ec01fc47a6722e11dd1e10cc4be617f8c80cf3"
+	var tx *Transaction
+	err := rlp.DecodeBytes(common.Hex2Bytes(raw), &tx)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	t.Log("Nonce:", tx.Nonce())
+	t.Log("To:", tx.To().Hex())
+	t.Log("Value:", tx.Value())
+	t.Log("Gas:", tx.Gas())
+	t.Log("GasPrice:", tx.GasPrice())
+	t.Log("V:", tx.data.V)
+	t.Log("R:", toHexInt(tx.data.R))
+	t.Log("S:", toHexInt(tx.data.S))
+
+	// recover addresss
+	signer := NewCep1Signer(big.NewInt(337))
+	_ = signer
+	from, err := Sender(signer, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("TxHash:", signer.Hash(tx).Hex())
+	t.Log("From:", from.Hex())
+}
+
+/*
+1000000000000000000
+1000000000000000000
+
+21000
+300000
+
+18000000000
+1800000000000
+
+*/
