@@ -13,4 +13,4 @@
 5. [Solidity](../solidity/docs/index.html) (i.e., Solc)
 6. [共识](./detailed_algorithms/consensus.md#consensus)
 7. [性能](./performance/performance.md#performance)
-8. [下载 CPChain 二进制程序](https://github.com/CPChain/chain/releases) and [Solidity 二进制程序](./quickstart/quickstart.md#solidity-binary-release)
+8. [下载 CPChain 二进制程序](https://github.com/CPChain/chain/releases) 和 [Solidity 二进制程序](./quickstart/quickstart.md#solidity-binary-release)
