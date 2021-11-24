@@ -178,7 +178,7 @@ module.exports = {
               ]
             },
             {
-              title: 'DETAILED ALGORITHMS',
+              title: '核心算法',
               collapsable: false,
               children: [
                 '/zh/content/detailed_algorithms/consensus',
