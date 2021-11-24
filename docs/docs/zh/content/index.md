@@ -2,7 +2,7 @@
 
 本文档为读者描述 CPChain 主网的信息概述、核心算法、共识以及当前支持的 API。
 
-Please mail to <info@cpchain.io> if you have any question.
+如有疑问请将问题提交给 <info@cpchain.io> 。
 
 ## Quick Reference
 
