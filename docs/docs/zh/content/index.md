@@ -6,8 +6,8 @@
 
 ## Quick Reference
 
-1. [Basic Information](./preliminaries/basic_information.md#basic-information)
-2. [Fusion API](./api/cpc_fusion.md#fusion-api)
+1. [基础信息](./preliminaries/basic_information.md#basic-information)
+2. [Fusion 接口](./api/cpc_fusion.md#fusion-api)
 3. [快速开始](./quickstart/quickstart-beginner.md#quick-start-for-beginner)
 4. [概述](./preliminaries/overview.md#overview)
 5. [Solidity](../solidity/docs/index.html) (i.e., Solc)
