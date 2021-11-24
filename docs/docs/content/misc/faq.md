@@ -316,3 +316,16 @@ Nevertheless, it is feasible to downgrade to a previous compatible
 version to circumvent certain bugs in the newer ones. Downgrading should
 be only considered as an expedient. And please update `cpchain` if the
 bug is solved.
+
+## How to specify the virtual host of the RPC
+
+Please create a file named `config.toml` in the `<datadir>`, the content as below:
+
+```toml
+
+[node]
+HTTPVirtualHosts=["server01"]
+
+```
+
+The `server01` is the specified host. This means the node only accepts the request sent to the specified host. If specify the host to `*`, which means all requests will be accepted.
