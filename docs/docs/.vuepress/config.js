@@ -151,7 +151,7 @@ module.exports = {
           sidebar: {
               '/zh/content/': [
             {
-              title: 'QUICK START',
+              title: '快速开始',
               collapsable: false,
               children: [
                   '/zh/content/quickstart/quickstart-beginner',
@@ -170,7 +170,7 @@ module.exports = {
               ]
             },
             {
-              title: 'API',
+              title: '接口描述',
               collapsable: false,
               children: [
                 '/zh/content/api/rpc',
@@ -187,7 +187,7 @@ module.exports = {
               ]
             },
             {
-              title: 'SMART CONTRACTS',
+              title: '智能合约',
               collapsable: false,
               children: [
                 '/zh/content/smart_contracts/built_in_sm',
@@ -195,7 +195,7 @@ module.exports = {
               ]
             },
             {
-              title: 'TEST',
+              title: '测试',
               collapsable: false,
               children: [
                 '/zh/content/test/test-overview'
