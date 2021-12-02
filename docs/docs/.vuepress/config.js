@@ -51,9 +51,9 @@ module.exports = {
               children: [
                 '/content/preliminaries/abstract',
                 '/content/preliminaries/basic_information',
-                '/content/preliminaries/configuration',
+                '/content/preliminaries/overview',
                 '/content/preliminaries/installation',
-                '/content/preliminaries/overview'
+                '/content/preliminaries/configuration'
               ]
             },
             {
@@ -102,6 +102,7 @@ module.exports = {
                 '/content/misc/faq',
                 '/content/misc/glossary',
                 '/content/misc/mapping',
+                '/content/wallets/support',
               ]
             },
           ],
