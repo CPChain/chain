@@ -316,3 +316,16 @@ Nevertheless, it is feasible to downgrade to a previous compatible
 version to circumvent certain bugs in the newer ones. Downgrading should
 be only considered as an expedient. And please update `cpchain` if the
 bug is solved.
+
+## 如何指定 RPC 服务的域名
+
+在 `datadir` 中创建文件 `config.toml`，文件内容如下：
+
+```toml
+
+[node]
+HTTPVirtualHosts=["server01"]
+
+```
+
+其中，`server01` 即所需域名，表示节点只接受通过此域名来访问的请求。若指定为 `*`，则表示所有域名的请求都可接受。
