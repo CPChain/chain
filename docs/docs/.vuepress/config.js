@@ -57,6 +57,23 @@ module.exports = {
               ]
             },
             {
+              title: 'WALLETS',
+              collapsable: false,
+              children: [
+                '/content/wallets/wallet_guide',
+                '/content/wallets/mobile_app_wallets',
+                '/content/wallets/web_wallets',
+                {
+                  title: 'HARDWARE WALLETS',
+                  collapsable: true,
+                  children: [
+                    '/content/wallets/hardware_wallets/ledger'
+                  ]
+                },
+                '/content/wallets/support'
+              ]
+            },
+            {
               title: 'API',
               collapsable: false,
               children: [
@@ -101,8 +118,7 @@ module.exports = {
               children: [
                 '/content/misc/faq',
                 '/content/misc/glossary',
-                '/content/misc/mapping',
-                '/content/wallets/support',
+                '/content/misc/mapping'
               ]
             },
           ],
