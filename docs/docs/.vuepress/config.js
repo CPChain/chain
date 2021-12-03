@@ -51,9 +51,26 @@ module.exports = {
               children: [
                 '/content/preliminaries/abstract',
                 '/content/preliminaries/basic_information',
-                '/content/preliminaries/configuration',
+                '/content/preliminaries/overview',
                 '/content/preliminaries/installation',
-                '/content/preliminaries/overview'
+                '/content/preliminaries/configuration'
+              ]
+            },
+            {
+              title: 'WALLETS',
+              collapsable: false,
+              children: [
+                '/content/wallets/wallet_guide',
+                '/content/wallets/mobile_app_wallets',
+                '/content/wallets/web_wallets',
+                {
+                  title: 'HARDWARE WALLETS',
+                  collapsable: true,
+                  children: [
+                    '/content/wallets/hardware_wallets/ledger'
+                  ]
+                },
+                '/content/wallets/support'
               ]
             },
             {
@@ -101,7 +118,7 @@ module.exports = {
               children: [
                 '/content/misc/faq',
                 '/content/misc/glossary',
-                '/content/misc/mapping',
+                '/content/misc/mapping'
               ]
             },
           ],
