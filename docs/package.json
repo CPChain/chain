@@ -16,7 +16,7 @@
     "@renovamen/vuepress-plugin-katex": "^0.2.0",
     "async-validator": "1.11.5",
     "element-ui": "^2.15.6",
-    "markdown-it": "^12.2.0",
+    "markdown-it": "^12.3.2",
     "markdown-it-katex": "^2.0.3"
   }
 }
